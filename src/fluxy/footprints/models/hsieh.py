@@ -24,19 +24,21 @@ def _get_config(stability: np.ndarray, thres: float):
     indices = np.zeros_like(stability, dtype=int)
     # indices[stability < -thres] = 0
     indices[np.abs(stability) < thres] = 1
-    indices[stability >= thres] = 2
+    indices[stability > thres] = 2
     return options[indices].T
 
 
 def pdf(x, mu, sigma):
+    """Implementation of the gaussian kernel."""
     return np.divide(np.exp(-0.5 * ((x - mu) / sigma) ** 2),
                      (np.sqrt(2 * np.pi) * sigma))
 
 
 class Hsieh2000:
+    """State persistent Hsieh model implementation.
+    """
     def __init__(self, X_dim, Y_dim, resolution,
                  stab_thres: float) -> None:
-        self.raster = ...
         pass
     
     def __call__(self, *args: Any, **kwds: Any) -> Any:
