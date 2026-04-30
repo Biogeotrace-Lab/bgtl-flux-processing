@@ -1,8 +1,9 @@
 import h5py
+import pandas as pd
 
 
 class Matlab73(h5py.File):
-    """Weak wrapper around :class:`h5py.File` for reading `.mat` files of v7.3+.
+    """Weak wrapper around :class:`h5py.File` for reading `.mat` files of v7.3+
     """
     def __init__(self, name, mode='r', driver=None, libver=None,
                  userblock_size=None, swmr=False, rdcc_nslots=None,
@@ -27,3 +28,12 @@ class Matlab73(h5py.File):
 
     def __del__(self):
         self.close()
+
+
+class MatlabFluxDataFrame(pd.DataFrame):
+    """Extract specific 1-d columns from a `.mat` file
+    into a `pandas.DataFrame`.
+    """
+    def __init__(self, filepath: str, keys: list[str]) -> None:
+        matfile = Matlab73(filepath)
+        super().__init__({k: matfile['data'][k][:].flatten() for k in keys}) # type: ignore
