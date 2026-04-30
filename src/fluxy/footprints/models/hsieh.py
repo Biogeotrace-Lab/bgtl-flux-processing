@@ -98,8 +98,10 @@ def hsieh2d(ustar: np.ndarray,
     # 1 sy per x element per timestep.
     # This also depends on X resolution.
     # Sy close to zero leads to anomalous contribution values.
-    Sy = np.multiply((zo * .3 * np.divide(sv, ustar + stability_eps))[..., np.newaxis],
-                     np.divide(Xds, zo[..., np.newaxis] + stability_eps) ** 0.86)
+    Sy = np.multiply(zo * .3 * np.divide(sv, ustar + stability_eps)
+                     [..., np.newaxis],
+                     np.divide(Xds, zo[..., np.newaxis] + stability_eps)
+                     ** 0.86)
 
     # Define the grid's Y extent.
     Y = np.arange(-Yr * .5, Yr * .5, analysis_res)[np.newaxis, ...]
