@@ -21,5 +21,9 @@ class Matlab73(h5py.File):
 
         # Can recursively add keys as attributes pandas-style, optionally.
 
+    def __getitem__(self, name):
+        att = super().__getitem__(name)
+        return att
+
     def __del__(self):
         self.close()
