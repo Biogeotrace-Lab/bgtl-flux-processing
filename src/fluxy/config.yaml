@@ -1,0 +1,14 @@
+# Default configurations for meteorological data.
+read_csv_opts:
+  header: 1
+  skiprows: [2, 3]
+  parse_dates: ["TIMESTAMP"]
+  index_col: "TIMESTAMP"
+  na_values: [-99999, 99999, -9999, 9999, -6999, -7777, "NA", "NAN"]
+
+volt_conversion:
+  - start_date: "2025-01-01"
+    constants:
+      key: value
+  -
+
