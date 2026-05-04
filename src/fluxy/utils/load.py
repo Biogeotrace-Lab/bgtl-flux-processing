@@ -3,7 +3,6 @@ from .config import get_default_config
 from typing import ParamSpec
 from typing import TypeVar
 from typing import Callable
-from typing import Concatenate
 
 from functools import wraps
 

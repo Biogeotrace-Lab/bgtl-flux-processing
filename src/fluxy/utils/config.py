@@ -1,6 +1,6 @@
 import yaml
 import os
-import meteo
+import fluxy
 
 from pathlib import Path
 from typing import TypedDict
@@ -8,7 +8,8 @@ from typing import Any
 
 
 class ConfigDict(TypedDict):
-    na_values: list[Any]
+    read_csv_opts: dict
+    volt_conversion: list[dict]
 
 
 def read_config(path: str) -> ConfigDict:
@@ -27,7 +28,7 @@ def get_default_config() -> ConfigDict:
     """Get the default configuration file of the package.
     """
     # Get the directory of the package.
-    pkg_directory = Path(meteo.__file__).resolve()
+    pkg_directory = Path(fluxy.__file__).resolve()
     pkg_directory = pkg_directory.parents[0]
     return read_config(os.path.join(pkg_directory, "config.yaml"))
 
@@ -43,3 +44,14 @@ def generate_configuration_file_template(path: str) -> None:
     """
     config = get_default_config()
     write_config(data=config, path=path)
+
+
+def get_config() -> ConfigDict:
+    """Local or default configuration file.
+    """
+    try:
+        config = read_config("config.yaml")
+    except FileNotFoundError:
+        config = get_default_config()
+    return config
+    
