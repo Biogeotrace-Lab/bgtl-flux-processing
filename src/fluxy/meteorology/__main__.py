@@ -13,11 +13,11 @@ import sys
 # os.chdir(pkg_directory)
 
 # Get configuration.
-from .utils.config import get_default_config
-from meteo.utils.config import generate_configuration_file_template
-from meteo.utils.load import load_csv_with_na_values
-from meteo.xema.xema_dataframe import XEMADataFrame
-from meteo.copernicus.ndvi_series import NDVISeries
+from ..utils.config import get_config
+from ..utils.config import generate_configuration_file_template
+from ..utils.load import load_csv_with_na_values
+from ..meteorology.xema.xema_dataframe import XEMADataFrame
+from ..meteorology.copernicus.ndvi_series import NDVISeries
 
 import pandas as pd
 import argparse
