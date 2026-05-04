@@ -4,9 +4,9 @@ from scipy.ndimage import median_filter
 from scipy.ndimage import vectorized_filter
 
 
-def median_filtering_1d(data: np.ndarray, window_size: int,
-                        thresholds: np.ndarray | list[float],
-                        axis: int = 1) -> np.ndarray:
+def conditional_median_filtering_1d(data: np.ndarray, window_size: int,
+                                    thresholds: np.ndarray | list[float],
+                                    axis: int = 1) -> np.ndarray:
     """Perform local outlier filtering using a median window value.
 
     :param data: The data to filter (2D) of dimensions row x variables.
@@ -19,6 +19,9 @@ def median_filtering_1d(data: np.ndarray, window_size: int,
     return data_copy
 
 
-def local_median_fillna(data: np.ndarray, size: int | tuple[int]) -> np.ndarray:
+def nanmedian_filtering_1d(data: np.ndarray,
+                           size: int | tuple[int]) -> np.ndarray:
+    """Pass a nanmedian filter.
+    """
     return vectorized_filter(data, np.nanmedian, size=size,
                              mode='constant', cval=np.nan)
