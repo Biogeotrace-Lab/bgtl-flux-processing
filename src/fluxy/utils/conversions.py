@@ -19,6 +19,10 @@ def project_analog_values_to_units(data: pd.DataFrame,
 def clip_to_nan(data: pd.DataFrame,
                 lower_limits: np.ndarray | Sequence | None = None,
                 upper_limits: np.ndarray | Sequence | None = None):
+    """Discard values out of predefined range and replace with NaN.
+
+    # TODO parameters documentation
+    """
     # None inequality assessment supported for dataframes.
     return data.mask((data < lower_limits) | (data > upper_limits),
                      inplace=True)
