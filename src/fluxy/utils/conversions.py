@@ -1,0 +1,24 @@
+import pandas as pd
+import numpy as np
+
+from typing import Sequence
+
+
+def project_analog_values_to_units(data: pd.DataFrame,
+                                   scalars: list,
+                                   offsets: list | None = None):
+    """Convert analog sensor readings (volts) into applicable
+    meteorological units.
+
+    # TODO parameters
+    """
+    data = data.multiply(scalars).add(offsets or 0)
+    return data
+
+
+def clip_to_nan(data: pd.DataFrame,
+                lower_limits: np.ndarray | Sequence | None = None,
+                upper_limits: np.ndarray | Sequence | None = None):
+    # None inequality assessment supported for dataframes.
+    return data.mask((data < lower_limits) | (data > upper_limits),
+                     inplace=True)
