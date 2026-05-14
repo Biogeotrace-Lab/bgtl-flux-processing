@@ -1,3 +1,10 @@
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "bgtl-fluxy"
 dynamic = ["version"]
+
+[project.scripts]
+bgtl-meteo = "fluxy.meteorology.__main__:main"
