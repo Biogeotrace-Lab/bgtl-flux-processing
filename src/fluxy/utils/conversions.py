@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 
 from typing import Sequence
+from .config import ConfigDict
 
 
 def project_analog_values_to_units(data: pd.DataFrame,
@@ -26,3 +27,15 @@ def clip_to_nan(data: pd.DataFrame,
     # None inequality assessment supported for dataframes.
     return data.mask((data < lower_limits) | (data > upper_limits),
                      inplace=True)
+
+
+def get_projection_arrays(config: ConfigDict):
+    scalars = ...
+    offsets = ...
+    return scalars, offsets
+
+
+def get_minmax_arrays(config: ConfigDict):
+    lower_limits = ...
+    upper_limits = ...
+    return lower_limits, upper_limits
