@@ -7,8 +7,16 @@ from typing import TypedDict
 from typing import Any
 
 
+class ReadCsvOpts(TypedDict):
+    header: int
+    skiprows: list
+    parse_dates: list
+    index_col: str
+    na_values: list
+
+
 class ConfigDict(TypedDict):
-    read_csv_opts: dict
+    read_csv_opts: ReadCsvOpts
     volt_conversion: list[dict]
 
 
