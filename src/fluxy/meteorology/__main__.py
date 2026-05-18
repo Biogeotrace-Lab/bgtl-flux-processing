@@ -15,9 +15,9 @@ import sys
 # Get configuration.
 from ..utils.config import get_config
 from ..utils.config import generate_configuration_file_template
-from ..utils.load import load_csv_with_na_values
 from ..meteorology.xema.xema_dataframe import XEMADataFrame
 from ..meteorology.copernicus.ndvi_series import NDVISeries
+from .processing import process_site_meteo
 
 import pandas as pd
 import argparse
@@ -32,8 +32,7 @@ argument_parser = argparse.ArgumentParser("EC-meteo",
                                           "and/or met sensor value " \
                                           "conversions.")
 
-argument_parser.add_argument("--met-file", type=str, required=True,
-                             help="path to the Met file to preprocess.")
+argument_parser.add_argument("site")
 argument_parser.add_argument("--config", type=str, required=False,
                              help="path to yaml configuration file. " \
                              "If not provided, a default configuration file " \
@@ -51,17 +50,19 @@ def main():
         generate_configuration_file_template(".")
         return 0
 
-    # Read met and parse na values as indicated by the `invalid` config array.
-    met_dataframe = load_csv_with_na_values(options.met_file)
-    # Construct xema dataframe based on met timeseries index.
-    xema_dataframe = XEMADataFrame(index=met_dataframe.index) # type: ignore
-    # Construct ndvi series based on met timeseries index.
-    ndvi_series = NDVISeries(index=[])
-    # Concatenate the result column-wise for output.
-    result = pd.concat([met_dataframe,
-                        xema_dataframe,
-                        ndvi_series], axis=1)
-    result.to_csv("./test_records.csv")
+    process_site_meteo(options.site)
+
+    # # Read met and parse na values as indicated by the `invalid` config array.
+    # met_dataframe = (options.met_file)
+    # # Construct xema dataframe based on met timeseries index.
+    # xema_dataframe = XEMADataFrame(index=met_dataframe.index) # type: ignore
+    # # Construct ndvi series based on met timeseries index.
+    # ndvi_series = NDVISeries(index=[])
+    # # Concatenate the result column-wise for output.
+    # result = pd.concat([met_dataframe,
+    #                     xema_dataframe,
+    #                     ndvi_series], axis=1)
+    # result.to_csv("./test_records.csv")
     return 0
 
 
