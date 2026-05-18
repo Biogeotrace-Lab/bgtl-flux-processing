@@ -1,6 +1,8 @@
 import yaml
 import os
 import fluxy
+import datetime
+import shutil
 
 from pathlib import Path
 from typing import TypedDict
@@ -15,12 +17,20 @@ class ReadCsvOpts(TypedDict):
     na_values: list
 
 
+class ConversionConsts(TypedDict):
+    scalar: float | str
+    offset: float | str
+    lower: float | str
+    upper: float | str
+    var: str
+
+
 class ConfigDict(TypedDict):
     read_csv_opts: ReadCsvOpts
-    volt_conversion: list[dict]
+    volt_conversions: dict[datetime.datetime, dict[str, ConversionConsts]]
 
 
-def read_config(path: str) -> ConfigDict:
+def _read_config(path: str) -> ConfigDict:
     """Read yaml configuration file."""
     with open(path) as config_stream:
         return yaml.safe_load(config_stream)
@@ -38,7 +48,7 @@ def get_default_config() -> ConfigDict:
     # Get the directory of the package.
     pkg_directory = Path(fluxy.__file__).resolve()
     pkg_directory = pkg_directory.parents[0]
-    return read_config(os.path.join(pkg_directory, "config.yaml"))
+    return _read_config(os.path.join(pkg_directory, "config.yaml"))
 
 
 def generate_configuration_file_template(path: str) -> None:
@@ -50,16 +60,23 @@ def generate_configuration_file_template(path: str) -> None:
     :returns:
     :rtype: `None`
     """
-    config = get_default_config()
-    write_config(data=config, path=path)
+    # Get the directory of the package.
+    pkg_directory = Path(fluxy.__file__).resolve()
+    pkg_directory = pkg_directory.parents[0]
+    shutil.copyfile(os.path.join(pkg_directory, "config.yaml"),
+                    os.path.join(path, "config.yaml"))
+
 
 
 def get_config() -> ConfigDict:
     """Local or default configuration file.
     """
     try:
-        config = read_config("config.yaml")
+        config = _read_config("config.yaml")
     except FileNotFoundError:
         config = get_default_config()
     return config
-    
+
+
+def _eval_arithmetic_value():
+    ...
