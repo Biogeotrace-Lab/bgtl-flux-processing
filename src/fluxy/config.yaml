@@ -1,6 +1,4 @@
-Rietvell:
-  file: /ec_raw/Data/Rietvell/Metdata/2025/CR1000_Met30min.dat
-
+general:
   # Default configurations for meteorological data.
   read_csv_opts: &read_csv_opts
     header: 1 # Which csv row contains the headers
@@ -8,7 +6,10 @@ Rietvell:
     parse_dates: ["TIMESTAMP"] # Datetime rows
     index_col: "TIMESTAMP" # Index column
     na_values: [-99999, 99999, -9999, 9999, -6999, -7777, "NA", "NAN"]
-
+Rietvell:
+  file: /ec_raw/Data/Rietvell/Metdata/2025/CR1000_Met30min.dat
+  # Default configurations for meteorological data.
+  read_csv_opts: *read_csv_opts
   # Required information for converting
   # site-specific volt measurements into
   # meteorological units per declared time period.
