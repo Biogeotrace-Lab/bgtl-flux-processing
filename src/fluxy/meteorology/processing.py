@@ -2,7 +2,7 @@ import pandas as pd
 
 from ..io.csv import load_timeseries
 from ..utils.config import get_config
-from ..utils.conversions import project_analog_values_to_units
+from ..utils.conversions import project_analog_values_to_meteo_units
 
 
 def process_site_meteo(site: str):
@@ -20,11 +20,12 @@ def process_site_meteo(site: str):
     # Load data.
     data = load_timeseries(config['file'], config)
 
-    # PA injection.
+    # PA injection. We need atmospheric pressure
+    # measurements from the flux sensors.
     data = data
 
     # Convert volts. Add all variables prior to this.
-    data = project_analog_values_to_units(data, config)
+    data = project_analog_values_to_meteo_units(data, config)
 
     print(data)
     # Convert volts to meteorological units.

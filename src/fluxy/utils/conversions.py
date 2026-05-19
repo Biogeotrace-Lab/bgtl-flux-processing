@@ -5,7 +5,7 @@ from typing import Sequence
 from .config import ConfigDict
 
 
-def project_analog_values_to_units(data: pd.DataFrame, config: ConfigDict):
+def project_analog_values_to_meteo_units(data: pd.DataFrame, config: ConfigDict):
     """Convert analog sensor readings (volts) into applicable
     meteorological units.
 
