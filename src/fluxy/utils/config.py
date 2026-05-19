@@ -25,7 +25,12 @@ class ConversionConsts(TypedDict):
     var: str
 
 
+class GeneralOpts(TypedDict):
+    read_csv_opts: ReadCsvOpts
+
+
 class ConfigDict(TypedDict):
+    general: GeneralOpts
     read_csv_opts: ReadCsvOpts
     volt_conversions: dict[datetime.datetime, dict[str, ConversionConsts]]
 
