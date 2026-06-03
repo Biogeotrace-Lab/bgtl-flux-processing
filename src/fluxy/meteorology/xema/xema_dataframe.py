@@ -1,6 +1,8 @@
 import pandas as pd
 
 from .xema_client import XEMAClient
+from .variables import xema_variables
+
 from typing import Literal
 from datetime import timedelta
 
@@ -42,7 +44,8 @@ class XEMADataFrame(pd.DataFrame):
                                                   "codi_variable"])
                                       .loc[:, "valor_lectura"]
                                       .unstack())
-
+            data.index.rename("TIMESTAMP", inplace=True)
+            data.rename(columns=xema_variables, inplace=True)
             # Assuming Met30min is endtime logged, XEMA must be offset by
             # the monitoring interval as it is starttime logged.
             data.index += delta
