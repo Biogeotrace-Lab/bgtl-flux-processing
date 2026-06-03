@@ -122,9 +122,11 @@ class XEMAClient:
                                     where=where,
                                     offset=offset,
                                     limit=limit)
+        request = requests.get(self.API_query_endpoint,
+                                 headers=self.headers,
+                                 params=params)
+        request.raise_for_status()
 
         return XEMAPayloadAdapter.validate_json(
-                    requests.get(self.API_query_endpoint,
-                                 headers=self.headers,
-                                 params=params).content,
+                    request.content,
                     strict=False)
