@@ -32,7 +32,8 @@ class XEMADataFrame(pd.DataFrame):
         and data_lectura is not null
         """.format(start=(index[0] - delta).strftime("%Y-%m-%dT%H:%M:%S"),
                    end=(index[-1] + delta).strftime("%Y-%m-%dT%H:%M:%S"),
-                   station=station)
+                   station=station,
+                   validated_only="and codi_estat = 'V'")
 
         data = client.query(select="data_lectura, codi_variable, valor_lectura",
                             where=where_query)
@@ -49,6 +50,7 @@ class XEMADataFrame(pd.DataFrame):
             # Assuming Met30min is endtime logged, XEMA must be offset by
             # the monitoring interval as it is starttime logged.
             data.index += delta
-
+        
+        # data = data.resample('30 min').asfreq() # type: ignore
         # Load only the specific shifted indices that we need.
-        super().__init__(data=data.loc[index[index.isin(data.index)]] if there_is_data else []) # type: ignore
+        super().__init__(data=data) # type: ignore
