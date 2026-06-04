@@ -94,6 +94,15 @@ Missing timestamps:
 {pd.Series(missing_rows)}
             """)
 
+    # Add Year, DOY, hour.
+    resampled_concatenated_dataframes['Year'] = resampled_concatenated_dataframes.index.year # type: ignore
+    resampled_concatenated_dataframes['DOY'] = resampled_concatenated_dataframes.index.dayoftheyear # type: ignore
+    resampled_concatenated_dataframes['Time'] = resampled_concatenated_dataframes.index.strftime("%H%M") # type: ignore
+
+    resampled_concatenated_dataframes['DOY'][
+        resampled_concatenated_dataframes['Time'] == "0000"
+        ] -= 1
+
     # Turn index to column and persist.
     # We can probably drop the RECORD column.
     resampled_concatenated_dataframes.reset_index()\

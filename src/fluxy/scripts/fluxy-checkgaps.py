@@ -1,0 +1,13 @@
+import sys
+
+
+def main(argv):
+
+    for filename in argv:
+        ...
+
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv[1:]))
