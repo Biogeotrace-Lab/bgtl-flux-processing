@@ -1,6 +1,8 @@
 import sys
+import click
 
 
+@click.command()
 def main(argv):
 
     for filename in argv:
