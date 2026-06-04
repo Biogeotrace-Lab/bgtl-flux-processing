@@ -48,17 +48,16 @@ import click
 @click.argument("csv-like-files", nargs=-1, required=True)
 @click.option("--output", default="output.csv", help="The output file for the built meteorological dataset")
 def main(csv_like_files: list[str], output):
-    """Receive a list of csv paths and concatenate their content.
+    """Combine different datalogger files into a finalized master file for processing.
 
-    Writes merged content to the same folder, as a csv file.
-
-    :param csv_paths: An array of paths for the csv files to process.
-    :type csv_paths: `list[str]`
+    :param csv_like_files: An array of paths for the csv files to process.
+    :type csv_like_files: `list[str]`
+    :param output: The desired output file name.
+    :type output: `str`
     :return: Writes concatenated results on disk.
     :rtype: `None`
     """
     config = get_config()
-    print("Hello")
 
     directory = path.dirname(csv_like_files[0])
     basename = (path.basename(csv_like_files[0])
@@ -69,15 +68,6 @@ def main(csv_like_files: list[str], output):
     for csv_path in csv_like_files:
         df = load_timeseries(csv_path, config['general'])
         dataframes.append(df)
-
-        # for opts in config['general']['read_csv_opts']:
-        #    print(opts)
-        #    try:
-        #        df = pd.read_csv(csv_path, **opts)
-        #        dataframes.append(df)
-        #        break
-        #    except Exception as e:
-        #        ...
 
     # Run concatenation and sort.
     concatenated_dataframes = pd.concat(dataframes).sort_index()
