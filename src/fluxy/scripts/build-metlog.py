@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 """
 Created on Wed May  7 15:39:15 2025
 
@@ -39,9 +39,15 @@ from os import path
 from fluxy.utils.config import ConfigDict
 from fluxy.utils.config import get_config
 from fluxy.utils.tz_offsets import find_timeseries_gaps
+from fluxy.io.csv import load_timeseries
+
+import click
 
 
-def concatenate_csvs(csv_paths: list[str]):
+@click.command()
+@click.argument("csv-like-files", nargs=-1, required=True)
+@click.option("--output", default="output.csv", help="The output file for the built meteorological dataset")
+def main(csv_like_files: list[str], output):
     """Receive a list of csv paths and concatenate their content.
 
     Writes merged content to the same folder, as a csv file.
@@ -52,16 +58,26 @@ def concatenate_csvs(csv_paths: list[str]):
     :rtype: `None`
     """
     config = get_config()
+    print("Hello")
 
-    if len(csv_paths) < 2: return 0
-
-    directory = path.dirname(csv_paths[0])
-    basename = (path.basename(csv_paths[0])
+    directory = path.dirname(csv_like_files[0])
+    basename = (path.basename(csv_like_files[0])
                     # Get rid of extension to not overwrite file.
                     .split(".")[0])
 
-    dataframes = [pd.read_csv(csv_path, **config['general']['read_csv_opts'])
-                  for csv_path in csv_paths]
+    dataframes = []
+    for csv_path in csv_like_files:
+        df = load_timeseries(csv_path, config['general'])
+        dataframes.append(df)
+
+        # for opts in config['general']['read_csv_opts']:
+        #    print(opts)
+        #    try:
+        #        df = pd.read_csv(csv_path, **opts)
+        #        dataframes.append(df)
+        #        break
+        #    except Exception as e:
+        #        ...
 
     # Run concatenation and sort.
     concatenated_dataframes = pd.concat(dataframes).sort_index()
@@ -71,10 +87,10 @@ def concatenate_csvs(csv_paths: list[str]):
     # Explicitly fail on duplicate indices.
     if duplicated.any():
         raise RuntimeError(f"""{duplicated.sum()} duplicated values
-in the timeseries. Fix before proceeding.
+                    in the timeseries. Fix before proceeding.
 
-Duplicated rows:                        
-{concatenated_dataframes[duplicated]}
+                    Duplicated rows:                        
+{                   concatenated_dataframes[duplicated]}
                            """)
 
 
@@ -96,18 +112,15 @@ Missing timestamps:
 
     # Add Year, DOY, hour.
     resampled_concatenated_dataframes['Year'] = resampled_concatenated_dataframes.index.year # type: ignore
-    resampled_concatenated_dataframes['DOY'] = resampled_concatenated_dataframes.index.dayoftheyear # type: ignore
+    resampled_concatenated_dataframes['DOY'] = resampled_concatenated_dataframes.index.dayofyear # type: ignore
     resampled_concatenated_dataframes['Time'] = resampled_concatenated_dataframes.index.strftime("%H%M") # type: ignore
 
     # 0000 is the end of day / Not start of new day.
-    resampled_concatenated_dataframes['DOY'][
-        resampled_concatenated_dataframes['Time'] == "0000"
-        ] -= 1
+    resampled_concatenated_dataframes.loc[resampled_concatenated_dataframes['Time'] == "0000", "DOY"] -= 1
 
     # Turn index to column and persist.
     # We can probably drop the RECORD column.
     resampled_concatenated_dataframes.reset_index()\
-                           .drop(columns=["RECORD"])\
                            .to_csv(path.join(".", f"{basename}.csv"),
                                    index=False)
 
@@ -115,4 +128,4 @@ Missing timestamps:
 
 
 if __name__ == "__main__":
-    sys.exit(concatenate_csvs(csv_paths=sys.argv[1:]))
+    sys.exit(main(csv_paths=sys.argv[1:]))
