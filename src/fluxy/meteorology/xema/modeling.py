@@ -16,10 +16,8 @@ def get_global_linear_coefficient_arrays(df: pd.DataFrame,
     """
     # Clean data for coefficient estimation.
     mutual_indices = df.index.intersection(xema.index)
-    df = df[mutual_indices]
-    xema = xema[mutual_indices]
-    X = ...
-    Y = ...
+    Y = df[mutual_indices].to_numpy(float)
+    X = xema[mutual_indices].to_numpy(float)
     Xinv = np.linalg.inv(X.mT @ X)
     b = Xinv @ X.mT @ Y
     return b
