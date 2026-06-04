@@ -99,6 +99,7 @@ Missing timestamps:
     resampled_concatenated_dataframes['DOY'] = resampled_concatenated_dataframes.index.dayoftheyear # type: ignore
     resampled_concatenated_dataframes['Time'] = resampled_concatenated_dataframes.index.strftime("%H%M") # type: ignore
 
+    # 0000 is the end of day / Not start of new day.
     resampled_concatenated_dataframes['DOY'][
         resampled_concatenated_dataframes['Time'] == "0000"
         ] -= 1
