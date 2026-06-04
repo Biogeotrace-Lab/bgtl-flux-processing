@@ -1,11 +1,15 @@
 general:
   # Default configurations for meteorological data.
   read_csv_opts: &read_csv_opts
-    header: 1 # Which csv row contains the headers
-    skiprows: [2, 3] # Irrelevant rows (removes units and operations)
-    parse_dates: ["TIMESTAMP"] # Datetime rows
-    index_col: "TIMESTAMP" # Index column
-    na_values: [-99999, 99999, -9999, 9999, -6999, -7777, "NA", "NAN"]
+    - &default
+      header: 0
+      parse_dates: ["TIMESTAMP"]
+      index_col: "TIMESTAMP"
+      na_values: [-99999, 99999, -9999, 9999, -6999, -7777, "NA", "NAN"]
+    - <<: *default
+      header: 1 # Which csv row contains the headers
+      skiprows: [2, 3] # Irrelevant rows (removes units and operations)
+
 Rietvell:
   file: /ec_raw/Data/Rietvell/Metdata/2025/CR1000_Met30min.dat
   # Default configurations for meteorological data.
