@@ -7,4 +7,5 @@ name = "bgtl-fluxy"
 dynamic = ["version"]
 
 [project.scripts]
-bgtl-meteo = "fluxy.meteorology.__main__:main"
+bgtl-fluxy = "fluxy._cli:main"
+
