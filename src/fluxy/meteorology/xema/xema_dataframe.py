@@ -47,10 +47,14 @@ class XEMADataFrame(pd.DataFrame):
                                       .unstack())
             data.index.rename("TIMESTAMP", inplace=True)
             data.rename(columns=xema_variables, inplace=True)
+
+            data['PAR_1_Avg'] = data['RS']
+            data['SW_IN_Avg'] = data['RS']
+
             # Assuming Met30min is endtime logged, XEMA must be offset by
             # the monitoring interval as it is starttime logged.
             data.index += delta
-        
+
         # data = data.resample('30 min').asfreq() # type: ignore
         # Load only the specific shifted indices that we need.
         super().__init__(data=data) # type: ignore
