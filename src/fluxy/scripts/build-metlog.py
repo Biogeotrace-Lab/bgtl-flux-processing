@@ -55,7 +55,7 @@ logging.basicConfig(level=logging.INFO)
 
 @click.command()
 @click.argument("csv-like-files", nargs=-1, required=True)
-@click.option("--output", default="output.csv", help="The output file for the built meteorological dataset")
+@click.option("--output", default="Met30min.csv", help="The output file for the built meteorological dataset")
 def main(csv_like_files: list[str], output):
     """Combine different datalogger files into a finalized master file for processing.
 
@@ -131,7 +131,7 @@ There are {len(missing_rows)} missing rows in the timeseries:
     # Turn index to column and persist.
     # We can probably drop the RECORD column.
     resampled_concatenated_dataframes.reset_index()\
-                           .to_csv(path.join(".", f"{basename}.csv"),
+                           .to_csv(output,
                                    index=False)
     
     logger.info("Successfully created a new finalized log file containing "
