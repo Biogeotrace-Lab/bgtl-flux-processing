@@ -3,6 +3,7 @@ import os
 import fluxy
 import datetime
 import shutil
+import sys
 
 from pathlib import Path
 from typing import TypedDict
@@ -41,6 +42,11 @@ def _read_config(path: str) -> ConfigDict:
         return yaml.safe_load(config_stream)
 
 
+def _get_pkg_directory():
+    pkg_dir = Path(fluxy.__file__).resolve()
+    return pkg_dir.parents[0]
+
+
 def write_config(data: ConfigDict, path: str) -> None:
     """Write yaml configuration file."""
     with open(path, "w") as config_stream_out:
@@ -66,11 +72,9 @@ def generate_configuration_file_template(path: str) -> None:
     :rtype: `None`
     """
     # Get the directory of the package.
-    pkg_directory = Path(fluxy.__file__).resolve()
-    pkg_directory = pkg_directory.parents[0]
+    pkg_directory = _get_pkg_directory()
     shutil.copyfile(os.path.join(pkg_directory, "config.yaml"),
                     os.path.join(path, "config.yaml"))
-
 
 
 def get_config() -> ConfigDict:
@@ -81,6 +85,12 @@ def get_config() -> ConfigDict:
     except FileNotFoundError:
         config = get_default_config()
     return config
+
+
+def print_config_file() -> None:
+    pkg_directory = _get_pkg_directory()
+    with open(os.path.join(pkg_directory, "config.yaml")) as f:
+        shutil.copyfileobj(f, sys.stdout)
 
 
 def _eval_arithmetic_value():
