@@ -1,4 +1,4 @@
-general:
+default:
   # Default configurations for meteorological data.
   read_csv_opts: &read_csv_opts
     - &default

@@ -3,7 +3,7 @@ from ..utils.config import ConfigDict
 from ..utils.config import get_default_config
 
 
-_default_config = get_default_config()['general']
+_default_config = get_default_config()['default']
 
 def load_timeseries(csv_path: str, config: ConfigDict = _default_config) -> pd.DataFrame:
     """Load CSV into a DataFrame with preconfigured options in `config.yaml`
