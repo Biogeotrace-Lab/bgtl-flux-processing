@@ -33,15 +33,24 @@ and properly defined arguments.
 import pandas as pd
 import sys
 import warnings
+import logging
 
 from os import path
 
 from fluxy.utils.config import ConfigDict
 from fluxy.utils.config import get_config
-from fluxy.utils.tz_offsets import find_timeseries_gaps
 from fluxy.io.csv import load_timeseries
+from fluxy.utils.timeseries_checks import find_timeseries_duplicates
+from fluxy.utils.timeseries_checks import potential_timezone_issue
+from fluxy.utils.timeseries_checks import find_timeseries_gaps
+from fluxy.utils.timeseries_checks import fix_timezone_issue
 
 import click
+
+
+logger = logging.getLogger(__name__)
+
+logging.basicConfig(level=logging.INFO)
 
 
 @click.command()
@@ -66,21 +75,35 @@ def main(csv_like_files: list[str], output):
 
     dataframes = []
     for csv_path in csv_like_files:
-        df = load_timeseries(csv_path, config['general'])
+        df = load_timeseries(csv_path)
+        # Check duplicates
+        tzcheck, tzsuspects = potential_timezone_issue(df)
+        if tzcheck:
+            logger.info(f"{csv_path} potential tz issue at positions: {tzsuspects}")
+            logger.info("Attempting fix")
+            df = fix_timezone_issue(df, tzsuspects)
+
+        # Check tz issues
+        # Fix tz issues
         dataframes.append(df)
 
     # Run concatenation and sort.
     concatenated_dataframes = pd.concat(dataframes).sort_index()
+    concatenated_dataframes.drop_duplicates(inplace=True)
 
     duplicated = concatenated_dataframes.index.duplicated(keep=False)
-    
-    # Explicitly fail on duplicate indices.
+    _deduplicated = concatenated_dataframes[~concatenated_dataframes.index.duplicated()]
+    _gap_resample = _deduplicated.resample('30 min').asfreq()
+    gaps = _gap_resample.index.difference(_deduplicated.index)
+
+
+    # Explicitly fail on persistent duplicate indices.
     if duplicated.any():
         raise RuntimeError(f"""{duplicated.sum()} duplicated values
-                    in the timeseries. Fix before proceeding.
+                    in the timeseries of shape {concatenated_dataframes.shape}. Fix before proceeding.
 
                     Duplicated rows:                        
-{                   concatenated_dataframes[duplicated]}
+                    {concatenated_dataframes[duplicated]}
                            """)
 
 
@@ -92,13 +115,9 @@ def main(csv_like_files: list[str], output):
 
     missing_rows = resampled_concatenated_dataframes.index.difference(concatenated_dataframes.index)
     if len(missing_rows):
-        warnings.warn(f"""
-
-There are {len(missing_rows)} missing rows in the timeseries.
-
-Missing timestamps:
-{pd.Series(missing_rows)}
-            """)
+        logger.warning(f"""
+There are {len(missing_rows)} missing rows in the timeseries:
+{pd.Series(missing_rows)}""")
 
     # Add Year, DOY, hour.
     resampled_concatenated_dataframes['Year'] = resampled_concatenated_dataframes.index.year # type: ignore
@@ -107,13 +126,16 @@ Missing timestamps:
 
     # 0000 is the end of day / Not start of new day.
     resampled_concatenated_dataframes.loc[resampled_concatenated_dataframes['Time'] == "0000", "DOY"] -= 1
+    resampled_concatenated_dataframes.loc[resampled_concatenated_dataframes['Time'] == "0000", "Time"] = "2400"
 
     # Turn index to column and persist.
     # We can probably drop the RECORD column.
     resampled_concatenated_dataframes.reset_index()\
                            .to_csv(path.join(".", f"{basename}.csv"),
                                    index=False)
-
+    
+    logger.info("Successfully created a new finalized log file containing "
+                f"{resampled_concatenated_dataframes.shape[0]} rows.")
     return 0
 
 
