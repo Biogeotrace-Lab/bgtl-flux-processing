@@ -1,11 +1,18 @@
 [build-system]
-requires = ["setuptools >= 77.0.3"]
+requires = ["setuptools >= 77.0.3", "setuptools-scm >= 10.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "bgtl-fluxy"
 dynamic = ["version"]
+requires-python = ">= 3.11"
+dependencies = [
+"pandas",
+"click",
+]
 
 [project.scripts]
 bgtl-fluxy = "fluxy._cli:main"
 
+[tool.setuptools_scm]
+write_to = "src/fluxy/_version.py"
