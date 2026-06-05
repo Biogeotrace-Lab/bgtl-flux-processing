@@ -212,3 +212,4 @@ __marimo__/
 *.gz
 *.7zip
 
+_version.py
