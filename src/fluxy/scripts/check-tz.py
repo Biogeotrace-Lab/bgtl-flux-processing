@@ -4,7 +4,7 @@ import click
 
 @click.command()
 def main(argv):
-
+    """Not implemented"""
     for filename in argv:
         ...
 
