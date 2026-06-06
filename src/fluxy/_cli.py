@@ -13,7 +13,7 @@ SCRIPTS = Path(__file__).parent / "scripts"
 
 @click.group()
 def main():
-    """Welcome to Biogeotrace Lab's Fluxy - The command line suite for flux processing."""
+    """Welcome to Biogeotrace Lab's Fluxy - The command line suite for flux processing excellence."""
 
 
 for path in SCRIPTS.glob("[!_]*.py"):
