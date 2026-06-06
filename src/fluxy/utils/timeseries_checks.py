@@ -32,8 +32,14 @@ def find_timeseries_gaps(df: pd.DataFrame):
     """
     resampled = df[~df.index.duplicated()].resample('30 min').asfreq()
     gaps = resampled.index.difference(df.index)
-    gap_positions = np.where(resampled.index.isin(gaps))[0]
-    return resampled, gap_positions
+    gap_mask = resampled.index.isin(gaps)
+    consecutive = gap_mask[1:] & gap_mask[:-1]
+    consecutive_starts = np.where(consecutive)[0]
+    gap_positions = np.where(gap_mask)[0]
+    last_pair = 0
+    if gap_positions.size:
+        last_pair = np.where(gap_positions[1:] - gap_positions[:-1] == 1)[0][-1]
+    return resampled, gap_positions[last_pair: last_pair+2]
 
 
 def fix_timezone_issue(df: pd.DataFrame, suspects: np.ndarray):
@@ -51,7 +57,7 @@ def fix_timezone_issue(df: pd.DataFrame, suspects: np.ndarray):
     datetime_indices = df.index.to_numpy().copy()
     # Single use case for now.
     assert len(suspects) == 4
-    assert len(gaps) == 2
+    assert len(gaps) == 2, gaps
     # The 1st gap position is where the time change occured.
     start_index = gaps[0]
     # The middle of the suspects + 1 for slicing is the last affected record.
@@ -60,5 +66,6 @@ def fix_timezone_issue(df: pd.DataFrame, suspects: np.ndarray):
     datetime_indices[start_index:end_index] = datetime_indices[start_index:end_index] - pd.Timedelta("1 hour")
     # Replace index with corrected version.
     df.index = datetime_indices
+    df.index.name = 'TIMESTAMP'
     return df
 
