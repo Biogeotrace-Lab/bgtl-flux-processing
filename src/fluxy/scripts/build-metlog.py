@@ -40,6 +40,7 @@ from os import path
 from fluxy.utils.config import ConfigDict
 from fluxy.utils.config import get_config
 from fluxy.io.csv import load_timeseries
+from fluxy.utils.conversions import recover_records
 from fluxy.utils.timeseries_checks import find_timeseries_duplicates
 from fluxy.utils.timeseries_checks import potential_timezone_issue
 from fluxy.utils.timeseries_checks import find_timeseries_gaps
@@ -77,14 +78,14 @@ def main(csv_like_files: list[str], output):
     for csv_path in csv_like_files:
         df = load_timeseries(csv_path)
         # Check duplicates
+        # Check tz issues
         tzcheck, tzsuspects = potential_timezone_issue(df)
         if tzcheck:
             logger.info(f"{csv_path} potential tz issue at positions: {tzsuspects}")
             logger.info("Attempting fix")
+            # Fix tz issues
             df = fix_timezone_issue(df, tzsuspects)
 
-        # Check tz issues
-        # Fix tz issues
         dataframes.append(df)
 
     # Run concatenation and sort.
@@ -106,6 +107,9 @@ def main(csv_like_files: list[str], output):
                     {concatenated_dataframes[duplicated]}
                            """)
 
+    # Reset RECORDS column before resampling
+    concatenated_dataframes.drop(columns=['RECORD'], inplace=True)
+    recover_records(concatenated_dataframes)
 
     # Upsample to the same frequency incase of missing records.
     # Do not fill values.
@@ -133,11 +137,11 @@ There are {len(missing_rows)} missing rows in the timeseries:
     resampled_concatenated_dataframes.reset_index()\
                            .to_csv(output,
                                    index=False)
-    
-    logger.info("Successfully created a new finalized log file containing "
-                f"{resampled_concatenated_dataframes.shape[0]} rows.")
+    logger.info("\033[1;92mSuccessfully created a new finalized log file containing "
+                f"{resampled_concatenated_dataframes.shape[0]} rows.\033[0m")
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main(csv_paths=sys.argv[1:]))
+    sys.exit(main())
+
