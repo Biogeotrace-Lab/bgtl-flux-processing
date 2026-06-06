@@ -32,7 +32,7 @@ license = { text = "" }
 # changelog = ""
 
 [project.scripts]
-bgtl-fluxy = "fluxy._cli:main"
+fluxy = "fluxy._cli:main"
 
 [tool.setuptools_scm]
 write_to = "src/fluxy/_version.py"
