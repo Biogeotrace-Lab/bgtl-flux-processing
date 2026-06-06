@@ -134,9 +134,8 @@ There are {len(missing_rows)} missing rows in the timeseries:
 
     # Turn index to column and persist.
     # We can probably drop the RECORD column.
-    resampled_concatenated_dataframes.reset_index()\
-                           .to_csv(output,
-                                   index=False)
+    resampled_concatenated_dataframes\
+                           .to_csv(output)
     logger.info("\033[1;92mSuccessfully created a new finalized log file containing "
                 f"{resampled_concatenated_dataframes.shape[0]} rows.\033[0m")
     return 0
