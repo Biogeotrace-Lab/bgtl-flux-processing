@@ -53,13 +53,8 @@ def find_timeseries_gaps(df: pd.DataFrame):
     resampled = df[~df.index.duplicated()].resample('30 min').asfreq()
     gaps = resampled.index.difference(df.index)
     gap_mask = resampled.index.isin(gaps)
-    consecutive = gap_mask[1:] & gap_mask[:-1]
-    consecutive_starts = np.where(consecutive)[0]
     gap_positions = np.where(gap_mask)[0]
-    last_pair = 0
-    if gap_positions.size:
-        last_pair = np.where(gap_positions[1:] - gap_positions[:-1] == 1)[0][-1]
-    return resampled, gap_positions[last_pair: last_pair+2]
+    return resampled, gap_positions
 
 
 def fix_timezone_issue(df: pd.DataFrame, suspects: np.ndarray):
