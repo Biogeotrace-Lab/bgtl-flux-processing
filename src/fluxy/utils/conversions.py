@@ -89,22 +89,29 @@ def get_minmax_arrays(config: ConfigDict):
 
 
 def recover_timestamp_from_doy(df: pd.DataFrame):
-    """Try to undo TIMESTAMP destruction.
-    
-    Assumes series is timestamp-filled and tries to get rid of empty rows.
+    """Try to undo TIMESTAMP drop. Assumes series is timestamp-filled and
+    tries to get rid of empty rows.
     """
     # Remove EMPTY rows first.
     # Except the first one if it's empty for some
     # bloody reason. It sets start of era.
     first_row = df.iloc[[0]]
     df = df.iloc[1:]
-    df = df.dropna(how='all', subset=df.columns.difference(['Year', 'DOY', 'Time']))
+    # Assume empty rows in the middle of the timeseries were artificially added.
+    df = df.dropna(how="all", subset=df.columns.difference(["Year", "DOY", "Time"]))
     df = pd.concat([first_row, df])
-    df['Time'] = df.Time.astype(str).str.zfill(4)
-    df.loc[df.Time == "2400", "DOY"] += 1
-    df.loc[df.Time == "2400", "Time"] = "0000"
-    datetime_string = df.Year.astype(str) + '-' + df.DOY.astype(str) + ' ' + df.Time
-    df['TIMESTAMP'] = pd.to_datetime(datetime_string, format="%Y-%j %H%M")
+    # Assume DOY has only been tampered with in case of 2400H
+    # If not, these two lines have no effect.
+    DOY = df.DOY.copy()
+    DOY[df.Time == 24] += 1
+    Time = df.Time.copy()
+    Time[Time == 24] = 0
+    Time = pd.to_timedelta(Time, "h")
+    # Convert to datetime to be able to use the parsing later # to improve.
+    Time = (pd.to_datetime("00:00:00") + Time).dt.strftime("%H%M")
+    # Build datetime string for the datetime parser.
+    datetime_string = df.Year.astype(str) + "-" + DOY.astype(str) + " " + Time
+    df["TIMESTAMP"] = pd.to_datetime(datetime_string, format="%Y-%j %H%M")
     return df.set_index("TIMESTAMP")
 
 
