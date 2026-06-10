@@ -109,14 +109,13 @@ def main(csv_like_files: list[str], output):
 
     # Upsample to the same frequency incase of missing records.
     # Do not fill values.
-    resampled_concatenated_dataframes = concatenated_dataframes\
-                                        .resample("30 min")\
-                                        .asfreq()
+    # This will also fail for duplicate timestamps.
+    resampled_concatenated_dataframes, gaps = find_timeseries_gaps(concatenated_dataframes)
 
-    missing_rows = resampled_concatenated_dataframes.index.difference(concatenated_dataframes.index)
-    if len(missing_rows):
-        logger.warning(f"""
-There are {len(missing_rows)} missing rows in the timeseries:
+    if len(gaps):
+        missing_rows = resampled_concatenated_dataframes.index[gaps]
+        logger.warning(Fore.LIGHTYELLOW_EX + f"""
+There were {len(missing_rows)} missing rows in the timeseries:
 {pd.Series(missing_rows)}""")
 
     # Add Year, DOY, hour.
