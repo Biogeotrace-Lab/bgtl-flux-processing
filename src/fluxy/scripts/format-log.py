@@ -12,6 +12,7 @@ from ..io.csv import load_timeseries
 
 from ..utils.paths import change_directory
 
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
@@ -23,9 +24,11 @@ logging.basicConfig(level=logging.INFO)
 @click.option("--add-doy", is_flag=True, help="Create Year, DOY, Time columns from TIMESTAMP (Day-end 2400H)")
 @click.option("--outfolder", type=Path, help="Write formatted files to output folder", required=False)
 @click.option("--inplace", is_flag=True, help="Modify files inplace")
+@click.option("-p", "--print", "pprint", is_flag=True,
+              help="Print the result in stdout (terminal)")
 def main(csv_like_files: list[str], recover_timestamp: bool,
          amend_records: bool, add_doy: bool, outfolder: Path,
-         inplace: bool):
+         inplace: bool, pprint: bool):
     """Format log-files and try to recover lost information
     """
     for csv_path in csv_like_files:
@@ -36,9 +39,11 @@ def main(csv_like_files: list[str], recover_timestamp: bool,
         if recover_timestamp:
             df = recover_timestamp_from_doy(df)
             logger.info("Recovered timestamp column")
+        
         if amend_records:
             recover_records(df)
             logger.info("Added records column")
+        
         if add_doy:
             df = add_year_doy_time(df)
             logger.info("Created Year, DOY and Time columns with 2400H as end-of-day")
@@ -52,7 +57,10 @@ def main(csv_like_files: list[str], recover_timestamp: bool,
             new_csv_path = change_directory(csv_path, outfolder)
             df.to_csv(new_csv_path)
             logger.info(f"Formatted version written at {new_csv_path}")
-    
+
+        if pprint:
+            logger.info(f"\n{df}")
+
     return 0
 
 
