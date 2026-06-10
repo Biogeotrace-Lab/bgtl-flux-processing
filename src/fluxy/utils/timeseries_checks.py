@@ -24,6 +24,26 @@ def find_timeseries_duplicates(df: pd.DataFrame):
     return df[duplicates]
 
 
+def find_timezone_shift(df: pd.DataFrame, tz_suspects: np.ndarray):
+    """Find the last corresponding gap that is likely caused by a
+    timezone shift as described by `tz_suspects`.
+
+    # TODO Testing
+    """
+    assert not len(tz_suspects) % 4, "Not full hour shift"
+    N = len(tz_suspects) // 2 - 1
+    resampled = df[~df.index.duplicated()].resample('30 min').asfreq()
+    gaps = resampled.index.difference(df.index)
+    gap_mask = resampled.index.isin(gaps)
+    gap_positions = np.where(gap_mask)[0]
+    N_sized_gaps = np.where(
+            gap_positions[N:] - gap_positions[:-N] == N
+            )[0]
+    last_matching_gap = N_sized_gaps[-1]
+    offset = N + 1
+    return resampled, gap_positions[last_matching_gap:last_matching_gap+offset]
+
+
 def find_timeseries_gaps(df: pd.DataFrame):
     """Identify timeseries gaps.
 
