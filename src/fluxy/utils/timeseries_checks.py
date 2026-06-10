@@ -8,13 +8,14 @@ def potential_timezone_issue(df: pd.DataFrame):
     Requires the RECORD column as exported by the datalogger.
     """
     duplicates = find_timeseries_duplicates(df)
-    are_four = duplicates.shape[0] == 4
-
+    # Duplicates returns 4 rows per 1 hour of overlap.
+    are_even = not duplicates.shape[0] % 4
     sequential = False
     if not duplicates.empty:
         sequence = np.arange(duplicates['RECORD'].iloc[0], duplicates['RECORD'].iloc[-1] + 1)
+        # If record shows same range as sequence, there are no jumps.
         sequential = duplicates['RECORD'].shape[0] == sequence.shape[0]
-    return are_four and sequential, *np.where(df.index.isin(duplicates.index))
+    return are_even and sequential, *np.where(df.index.isin(duplicates.index))
 
 
 def find_timeseries_duplicates(df: pd.DataFrame):
