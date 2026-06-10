@@ -57,14 +57,7 @@ logging.basicConfig(level=logging.INFO)
 @click.argument("csv-like-files", nargs=-1, required=True)
 @click.option("--output", default="Met30min.csv", help="The output file for the built meteorological dataset")
 def main(csv_like_files: list[str], output):
-    """Combine different datalogger files into a finalized master file for processing.
-
-    :param csv_like_files: An array of paths for the csv files to process.
-    :type csv_like_files: `list[str]`
-    :param output: The desired output file name.
-    :type output: `str`
-    :return: Writes concatenated results on disk.
-    :rtype: `None`
+    """Build a complete timeseries csv from multiple partial sources.
     """
     config = get_config()
     dataframes = []
