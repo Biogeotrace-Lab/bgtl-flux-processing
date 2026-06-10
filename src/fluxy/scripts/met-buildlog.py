@@ -1,35 +1,3 @@
-
-"""
-Created on Wed May  7 15:39:15 2025
-
-@author: 1529783
-
-Code to append metdata from rietvell and alfacada in a one csv file. 
-
-
-@reviewer: 1818910
-This script appears to concatenate multiple logs vertically (time dimension). 
-
-Ideally this only needs to happen once every time there are multiple log files
-of the same thing, and then persist the results.
-
-
-### Usage
-
-For windows:
-```powershell
-> python .\\Met\\merge_scripts\\met_append.py $(Get-item Y:\\Data\\Rietvell\\MetData\\2025\\CR1000_Biomet*.dat)
-```
-
-For linux/mac:
-```bash
-> python ./Met/merge_scripts/met_append.py Path/To/Drive/Data/Rietvell/MetData/2025/CR1000_Biomet*.dat
-```
-
-TODO perhaps make it into a complete CLI tool with help message, description
-and properly defined arguments.
-"""
- 
 import pandas as pd
 import sys
 import logging
