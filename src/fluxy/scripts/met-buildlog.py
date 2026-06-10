@@ -68,11 +68,25 @@ def main(csv_like_files: list[str], output):
 
         # Check tz issues
         tzcheck, tzsuspects = potential_timezone_issue(df)
-        if tzcheck:
-            logger.info(f"{csv_path} potential tz issue at positions: {tzsuspects}")
-            logger.info("Attempting fix")
-            # Fix tz issues
-            df = fix_timezone_issue(df, tzsuspects)
+
+        while tzcheck:
+
+            logger.info(Fore.LIGHTRED_EX + "Potential timezone issue at rows: \n"
+                        f"{df.iloc[tzsuspects]}. "
+                        "Add 'TZ_issue' in config.yaml")
+
+            rs, gaps = find_timezone_shift(df, tzsuspects)
+            logger.info(f"\nLikely occured at\n{pd.Series(rs.iloc[gaps].index)}")
+            
+            proceed = input("Attempt fixing? y/n: ")
+            
+            if proceed == "y":
+                # Fix tz issues
+                df = fix_timezone_issue(df, tzsuspects)
+                tzcheck, tzsuspects = potential_timezone_issue(df)
+            else:
+                logger.info("Aborting.")
+                sys.exit(1)
 
         dataframes.append(df)
 
