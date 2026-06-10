@@ -127,14 +127,13 @@ def recover_records(df: pd.DataFrame):
 
 def add_year_doy_time(df: pd.DataFrame):
     """Use the TIMESTAMP column as a reference for Year, DOY and Time.
-    
+
     Changes 00H to 24H and defines moment as end-of-day.
     """
-    assert df.index.name == 'TIMESTAMP' and isinstance(df.index, pd.DatetimeIndex)
-    df['Year'] = df.index.year
-    df['DOY'] = df.index.dayofyear
-    df['Time'] = df.index.strftime("%H%M")
-    df.loc[df.Time == "0000", 'DOY'] -= 1
-    df.loc[df.Time == "0000", 'Time'] = "2400"
+    assert df.index.name == "TIMESTAMP" and isinstance(df.index, pd.DatetimeIndex)
+    df["Year"] = df.index.year
+    df["DOY"] = df.index.dayofyear
+    df["Time"] = df.index.hour + df.index.minute / 60
+    df.loc[df.Time == 0, "DOY"] -= 1
+    df.loc[df.Time == 0, "Time"] = 24
     return df
-
