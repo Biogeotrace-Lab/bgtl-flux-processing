@@ -121,7 +121,8 @@ def recover_records(df: pd.DataFrame):
     Should this require a TIMESTAMPed dataframe?
     """
     assert df.index.name == "TIMESTAMP"
-    df.insert(0, 'RECORD', range(df.shape[0]))
+    df.insert(0, "RECORD", range(df.shape[0]))
+    return df
 
 
 def add_year_doy_time(df: pd.DataFrame):
