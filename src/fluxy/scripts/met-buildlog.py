@@ -32,25 +32,24 @@ and properly defined arguments.
  
 import pandas as pd
 import sys
-import warnings
 import logging
 
-from os import path
-
-from fluxy.utils.config import ConfigDict
 from fluxy.utils.config import get_config
 from fluxy.io.csv import load_timeseries
 from fluxy.utils.conversions import recover_records
 from fluxy.utils.timeseries_checks import find_timeseries_duplicates
 from fluxy.utils.timeseries_checks import potential_timezone_issue
 from fluxy.utils.timeseries_checks import find_timeseries_gaps
+from fluxy.utils.timeseries_checks import find_timezone_shift
 from fluxy.utils.timeseries_checks import fix_timezone_issue
 
 import click
 
+from colorama import Fore
+from colorama import Style
+
 
 logger = logging.getLogger(__name__)
-
 logging.basicConfig(level=logging.INFO)
 
 
@@ -68,16 +67,12 @@ def main(csv_like_files: list[str], output):
     :rtype: `None`
     """
     config = get_config()
-
-    directory = path.dirname(csv_like_files[0])
-    basename = (path.basename(csv_like_files[0])
-                    # Get rid of extension to not overwrite file.
-                    .split(".")[0])
-
     dataframes = []
     for csv_path in csv_like_files:
+        logger.info(f"{csv_path}")
+
         df = load_timeseries(csv_path)
-        # Check duplicates
+
         # Check tz issues
         tzcheck, tzsuspects = potential_timezone_issue(df)
         if tzcheck:
@@ -89,14 +84,12 @@ def main(csv_like_files: list[str], output):
         dataframes.append(df)
 
     # Run concatenation and sort.
+    # We can sort because incase of duplicates it fails later.
     concatenated_dataframes = pd.concat(dataframes).sort_index()
     concatenated_dataframes.drop_duplicates(inplace=True)
 
+    # Get persisting duplicated indices.
     duplicated = concatenated_dataframes.index.duplicated(keep=False)
-    _deduplicated = concatenated_dataframes[~concatenated_dataframes.index.duplicated()]
-    _gap_resample = _deduplicated.resample('30 min').asfreq()
-    gaps = _gap_resample.index.difference(_deduplicated.index)
-
 
     # Explicitly fail on persistent duplicate indices.
     if duplicated.any():
@@ -106,10 +99,6 @@ def main(csv_like_files: list[str], output):
                     Duplicated rows:                        
                     {concatenated_dataframes[duplicated]}
                            """)
-
-    # Reset RECORDS column before resampling
-    concatenated_dataframes.drop(columns=['RECORD'], inplace=True)
-    recover_records(concatenated_dataframes)
 
     # Upsample to the same frequency incase of missing records.
     # Do not fill values.
