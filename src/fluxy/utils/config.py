@@ -6,16 +6,16 @@ import shutil
 import sys
 
 from pathlib import Path
-from typing import TypedDict
+from typing_extensions import TypedDict
 from typing import Any
 
 
 class ReadCsvOpts(TypedDict):
-    header: int
-    skiprows: list
-    parse_dates: list
-    index_col: str
-    na_values: list
+    header: int | None
+    skiprows: list | None
+    parse_dates: list | None
+    index_col: str | None
+    na_values: list | None
 
 
 class ConversionConsts(TypedDict):
@@ -26,14 +26,22 @@ class ConversionConsts(TypedDict):
     var: str
 
 
-class GeneralOpts(TypedDict):
-    read_csv_opts: ReadCsvOpts
+class Opts(TypedDict):
+    read_csv_opts: list[ReadCsvOpts]
 
 
-class ConfigDict(TypedDict):
-    general: GeneralOpts
-    read_csv_opts: ReadCsvOpts
-    volt_conversions: dict[datetime.datetime, dict[str, ConversionConsts]]
+class DefaultOpts(Opts):
+    read_csv_opts: list[ReadCsvOpts]
+
+
+class SiteConfig(Opts):
+    file: str
+    read_csv_opts: list[ReadCsvOpts]
+    volt_conversions: dict[datetime.datetime,
+                           dict[str, ConversionConsts]]
+
+
+type ConfigDict = dict[str, SiteConfig]
 
 
 def _read_config(path: str) -> ConfigDict:
@@ -84,6 +92,16 @@ def get_config() -> ConfigDict:
         config = _read_config("config.yaml")
     except FileNotFoundError:
         config = get_default_config()
+    return config
+
+
+def get_site_config(site: str) -> SiteConfig | None:
+    """Local or default configuration file.
+    """
+    try:
+        config = _read_config("config.yaml").get(site)
+    except FileNotFoundError:
+        config = get_default_config().get(site)
     return config
 
 
