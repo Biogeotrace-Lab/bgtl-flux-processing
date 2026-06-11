@@ -1,6 +1,7 @@
 import pandas as pd
 
 from ..io.csv import load_timeseries
+from ..utils.config import SiteConfig
 from ..utils.config import get_config
 from ..utils.conversions import project_analog_values_to_meteo_units
 
@@ -15,7 +16,7 @@ def process_site_meteo(site: str):
     1. Should this pipeline be able to process individual time
     periods independently?
     """
-    config = get_config()[site]
+    config: SiteConfig = get_config()[site]
 
     # Load data.
     data = load_timeseries(config['file'], config)
