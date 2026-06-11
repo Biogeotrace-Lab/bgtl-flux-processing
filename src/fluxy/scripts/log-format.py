@@ -29,7 +29,8 @@ logging.basicConfig(level=logging.INFO)
 def main(csv_like_files: list[str], recover_timestamp: bool,
          amend_records: bool, add_doy: bool, outfolder: Path,
          inplace: bool, pprint: bool):
-    """Format log-files and try to recover lost information
+    """Format log files and try to recover lost information, such as
+    timestamps
     """
     for csv_path in csv_like_files:
         logger.info(f"{csv_path}")
