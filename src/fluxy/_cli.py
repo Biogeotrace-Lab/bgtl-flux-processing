@@ -4,16 +4,19 @@
 
 import click
 import importlib
+import colorama
 
 from pathlib import Path
 
 
+colorama.init(autoreset=True)
 SCRIPTS = Path(__file__).parent / "scripts"
 
 
 @click.group()
 def main():
-    """Welcome to Biogeotrace Lab's Fluxy - The command line suite for flux processing excellence."""
+    """Welcome to Biogeotrace Lab's Fluxy -
+    The command line suite for flux processing excellence."""
 
 
 for path in SCRIPTS.glob("[!_]*.py"):
