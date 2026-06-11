@@ -4,7 +4,7 @@ import logging
 
 from fluxy.utils.config import get_config
 from fluxy.io.csv import load_timeseries
-from fluxy.utils.conversions import recover_records
+from fluxy.utils.conversions import add_year_doy_time
 from fluxy.utils.timeseries_checks import find_timeseries_duplicates
 from fluxy.utils.timeseries_checks import potential_timezone_issue
 from fluxy.utils.timeseries_checks import find_timeseries_gaps
@@ -86,14 +86,8 @@ def main(csv_like_files: list[str], output):
 There were {len(missing_rows)} missing rows in the timeseries:
 {pd.Series(missing_rows)}""")
 
-    # Add Year, DOY, hour.
-    resampled_concatenated_dataframes['Year'] = resampled_concatenated_dataframes.index.year # type: ignore
-    resampled_concatenated_dataframes['DOY'] = resampled_concatenated_dataframes.index.dayofyear # type: ignore
-    resampled_concatenated_dataframes['Time'] = resampled_concatenated_dataframes.index.strftime("%H%M") # type: ignore
-
-    # 0000 is the end of day / Not start of new day.
-    resampled_concatenated_dataframes.loc[resampled_concatenated_dataframes['Time'] == "0000", "DOY"] -= 1
-    resampled_concatenated_dataframes.loc[resampled_concatenated_dataframes['Time'] == "0000", "Time"] = "2400"
+    # Break timestamp to Year, DOY, Time.
+    resampled_concatenated_dataframes = add_year_doy_time(resampled_concatenated_dataframes)
 
     # Turn index to column and persist.
     # We can probably drop the RECORD column.
