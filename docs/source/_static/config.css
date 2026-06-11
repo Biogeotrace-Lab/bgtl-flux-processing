@@ -1,0 +1,33 @@
+/* Style the text next to the PyData logo */
+.title.logo__title {
+    font-weight: bold;
+    font-variant: small-caps;
+    text-transform: capitalize; /* Ensures lowercase letters convert cleanly to small caps */
+    letter-spacing: 0.5px;      /* Optional: makes small-caps much more readable */
+    font-size: 1.55rem;        /* Optional: tweaks sizing to fit nicely next to the image */
+}
+
+
+/* Alternate Method: Pure Filter manipulation (No mask required) */
+html[data-theme="dark"] .navbar-brand img {
+    /* Turns dark text pixels into bright white text pixels */
+    filter: invert(1) brightness(0.85) contrast(1.2);
+    
+    /* Softens the opacity slightly to perfectly match a muted font look */
+    opacity: 0.9;
+}
+
+
+.uab-logo-div {
+    max-width: 10rem;
+}
+
+.uab-logo {
+    display: block;
+    max-width: auto;
+}
+
+
+.bd-article-container {
+    height: 100%;
+}
