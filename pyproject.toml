@@ -19,20 +19,40 @@ dependencies = [
 "click",
 "pyyaml",
 "simpleeval",
+"colorama"
 ]
+
 readme = "README.md"
-keywords = []
+keywords = ["eddy", "covariance"]
 license = { text = "" }
 
 [project.urls]
 # homepage = ""
-# documentation = ""
-# repository = ""
-# issues = ""
-# changelog = ""
+documentation = "https://biogeotrace.com/fluxy"
+repository = "https://github.com/Biogeotrace-Lab/bgtl-flux-processing"
+issues = "https://github.com/Biogeotrace-Lab/bgtl-flux-processing/issues"
+changelog = "https://github.com/Biogeotrace-Lab/bgtl-flux-processing/blob/main/CHANGELOG.md"
+org = "https://biogeotrace.com"
 
 [project.scripts]
 fluxy = "fluxy._cli:main"
 
 [tool.setuptools_scm]
 write_to = "src/fluxy/_version.py"
+
+[project.optional-dependencies]
+dev = [
+    "git-cliff",
+    "black",
+]
+
+docs = [
+    "sphinx",
+    "myst-parser",
+    "pydata-sphinx-theme",
+    "sphinx-copybutton",
+    "sphinx-inline-tabs",
+    "sphinx-autobuild",
+    "sphinx-click"
+]
+
