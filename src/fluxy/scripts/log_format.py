@@ -17,7 +17,8 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
-@click.command()
+@click.command(name="log-format", short_help="Format log files and try "
+               "to recover lost information, such as timestamps")
 @click.argument("csv-like-files", nargs=-1, required=True)
 @click.option("--recover-timestamp", is_flag=True, help="Recover TIMESTAMP from Year, DOY, Time columns")
 @click.option("--amend-records", is_flag=True, help="Try to amend RECORD column destruction")
@@ -30,7 +31,7 @@ def main(csv_like_files: list[str], recover_timestamp: bool,
          amend_records: bool, add_doy: bool, outfolder: Path,
          inplace: bool, pprint: bool):
     """Format log files and try to recover lost information, such as
-    timestamps
+    timestamps.
     """
     for csv_path in csv_like_files:
         logger.info(f"{csv_path}")

@@ -21,11 +21,18 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
-@click.command()
+@click.command(name="log-build",
+               short_help="Build a complete timeseries csv "
+               "from multiple partial sources.")
 @click.argument("csv-like-files", nargs=-1, required=True)
 @click.option("--output", default="Met30min.csv", help="The output file for the built meteorological dataset")
 def main(csv_like_files: list[str], output):
-    """Build a complete timeseries csv from multiple partial sources.
+    """This command reliably builds a finalized timeseries
+    csv file from multiple source files of raw and uncertain nature.
+
+    It individually checks every provided CSV for overlaps and tries to handle
+    them and if duplicate timestamps pass into the concatenated file, the process
+    fails.
     """
     config = get_config()
     dataframes = []
@@ -68,12 +75,14 @@ def main(csv_like_files: list[str], output):
 
     # Explicitly fail on persistent duplicate indices.
     if duplicated.any():
-        raise RuntimeError(f"""{duplicated.sum()} duplicated values
-                    in the timeseries of shape {concatenated_dataframes.shape}. Fix before proceeding.
+        raise RuntimeError(f"""
+            {duplicated.sum()} duplicated values
+            in the timeseries of shape {concatenated_dataframes.shape}.
+            Fix before proceeding.
 
-                    Duplicated rows:                        
-                    {concatenated_dataframes[duplicated]}
-                           """)
+            Duplicated rows:                        
+            {concatenated_dataframes[duplicated]}
+            """)
 
     # Upsample to the same frequency incase of missing records.
     # Do not fill values.
@@ -82,9 +91,10 @@ def main(csv_like_files: list[str], output):
 
     if len(gaps):
         missing_rows = resampled_concatenated_dataframes.index[gaps]
-        logger.warning(Fore.LIGHTYELLOW_EX + f"""
-There were {len(missing_rows)} missing rows in the timeseries:
-{pd.Series(missing_rows)}""")
+        logger.warning(Fore.LIGHTYELLOW_EX +
+                       f"\nThere were {len(missing_rows)} missing "
+                       "rows in the timeseries:"
+                       f"\n{pd.Series(missing_rows)}")
 
     # Break timestamp to Year, DOY, Time.
     resampled_concatenated_dataframes = add_year_doy_time(resampled_concatenated_dataframes)
@@ -92,7 +102,8 @@ There were {len(missing_rows)} missing rows in the timeseries:
     # Turn index to column and persist.
     # We can probably drop the RECORD column.
     resampled_concatenated_dataframes.to_csv(output)
-    logger.info(Fore.LIGHTGREEN_EX + "Successfully created a new log file containing "
+    logger.info(Fore.LIGHTGREEN_EX +
+                "Successfully created a new log file containing "
                 f"{resampled_concatenated_dataframes.shape[0]} rows.")
     return 0
 

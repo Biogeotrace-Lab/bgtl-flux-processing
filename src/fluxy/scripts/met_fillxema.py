@@ -2,7 +2,7 @@ import sys
 import click
 
 
-@click.command()
+@click.command(name="met-xema")
 def main(argv):
     """Not implemented"""
     for filename in argv:
