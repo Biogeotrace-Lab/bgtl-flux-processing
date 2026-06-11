@@ -1,7 +1,6 @@
 """Dynamically build the command line suite.
 """
 
-import re
 import click
 import importlib
 import colorama
