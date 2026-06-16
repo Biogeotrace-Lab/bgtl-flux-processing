@@ -50,13 +50,13 @@ def main(csv_like_files: list[str], output):
 
         while tzcheck:
 
-            logger.info(Fore.LIGHTRED_EX + "Potential timezone issue at rows: \n"
-                        f"{df.iloc[tzsuspects]}. "
+            logger.info(Fore.LIGHTRED_EX + "Potential timezone issue at rows: \n" +
+                        f"{df.iloc[tzsuspects]}. " +
                         "Add 'TZ_issue' in config.yaml")
 
-            rs, gaps = find_timezone_shift(df, tzsuspects)
-            logger.info(f"\nLikely occured at\n{pd.Series(rs.iloc[gaps].index)}")
-            
+            rs, all_gaps, tz_gaps = find_timezone_shift(df, tzsuspects)
+            logger.info(f"\nLikely occured at\n{pd.Series(rs.iloc[tz_gaps].index)}")
+
             proceed = input("Attempt fixing? y/n: ")
             
             if proceed == "y":
