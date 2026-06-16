@@ -41,6 +41,10 @@ def main(csv_like_files: list[str], output):
 
         df = load_timeseries(csv_path)
 
+        if df.index.name != 'TIMESTAMP' or \
+            not isinstance(df.index, pd.DatetimeIndex):
+            raise RuntimeError("File does not have a 'TIMESTAMP' index.")
+
         # Check tz issues
         tzcheck, tzsuspects = potential_timezone_issue(df)
 
