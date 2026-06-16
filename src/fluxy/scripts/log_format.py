@@ -20,10 +20,16 @@ logging.basicConfig(level=logging.INFO)
 @click.command(name="log-format", short_help="Format log files and try "
                "to recover lost information, such as timestamps")
 @click.argument("csv-like-files", nargs=-1, required=True)
-@click.option("--recover-timestamp", is_flag=True, help="Recover TIMESTAMP from Year, DOY, Time columns")
-@click.option("--amend-records", is_flag=True, help="Try to amend RECORD column destruction")
-@click.option("--add-doy", is_flag=True, help="Create Year, DOY, Time columns from TIMESTAMP (Day-end 2400H)")
-@click.option("--outfolder", type=Path, help="Write formatted files to output folder", required=False)
+@click.option("--recover-timestamp", is_flag=True,
+              help="Recover TIMESTAMP from Year, DOY, Time columns")
+@click.option("--amend-records", is_flag=True,
+              help="Try to amend RECORD column destruction")
+@click.option("--add-doy", is_flag=True,
+              help="Create Year, DOY, "
+              "Time columns from TIMESTAMP (Day-end 2400H)")
+@click.option("--outfolder", type=Path,
+              help="Write formatted files to output folder",
+              required=False)
 @click.option("--inplace", is_flag=True, help="Modify files inplace")
 @click.option("-p", "--print", "pprint", is_flag=True,
               help="Print the result in stdout (terminal)")
@@ -36,7 +42,7 @@ def main(csv_like_files: list[str], recover_timestamp: bool,
     for csv_path in csv_like_files:
         logger.info(f"{csv_path}")
 
-        df = load_timeseries(csv_path, index_col=None, parse_dates=None)
+        df = load_timeseries(csv_path)
 
         if recover_timestamp:
             df = recover_timestamp_from_doy(df)
@@ -48,7 +54,8 @@ def main(csv_like_files: list[str], recover_timestamp: bool,
         
         if add_doy:
             df = add_year_doy_time(df)
-            logger.info("Created Year, DOY and Time columns with 2400H as end-of-day")
+            logger.info("Created Year, DOY and Time columns "
+                        "with 2400H as end-of-day")
 
         if inplace:
             df.to_csv(csv_path)
