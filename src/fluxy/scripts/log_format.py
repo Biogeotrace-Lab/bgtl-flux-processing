@@ -17,8 +17,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
-@click.command(name="log-format", short_help="Format log files and try "
-               "to recover lost information, such as timestamps")
+@click.command(name="log-format", short_help="Format log files.")
 @click.argument("csv-like-files", nargs=-1, required=True)
 @click.option("--recover-timestamp", is_flag=True,
               help="Recover TIMESTAMP from Year, DOY, Time columns")

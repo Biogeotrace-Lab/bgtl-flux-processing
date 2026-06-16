@@ -27,7 +27,7 @@ keywords = ["eddy", "covariance"]
 license = { text = "" }
 
 [project.urls]
-# homepage = ""
+homepage = "https://biogeotrace.com/fluxy"
 documentation = "https://biogeotrace.com/fluxy"
 repository = "https://github.com/Biogeotrace-Lab/bgtl-flux-processing"
 issues = "https://github.com/Biogeotrace-Lab/bgtl-flux-processing/issues"

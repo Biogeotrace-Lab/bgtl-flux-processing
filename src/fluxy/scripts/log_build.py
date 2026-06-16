@@ -22,12 +22,15 @@ logging.basicConfig(level=logging.INFO)
 
 
 @click.command(name="log-build",
-               short_help="Build a complete timeseries csv "
-               "from multiple partial sources.")
+               short_help="Build a complete timeseries "
+               "from multiple csv-like sources.")
 @click.argument("csv-like-files", nargs=-1, required=True)
-@click.option("--output", default="Met30min.csv", help="The output file for the built meteorological dataset")
+@click.option("--output", default="Met30min.csv",
+              help="The output file for the built meteorological dataset.")
 def main(csv_like_files: list[str], output):
-    """This command reliably builds a finalized timeseries
+    """Build a complete timeseries from multiple csv-like sources.
+
+    This command reliably builds a finalized timeseries
     csv file from multiple source files of raw and uncertain nature.
 
     It individually checks every provided CSV for overlaps and tries to handle

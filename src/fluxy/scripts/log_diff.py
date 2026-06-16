@@ -11,16 +11,16 @@ from colorama import Style
 
 logger = logging.getLogger(__name__)
 
-
 @click.command(name="log-diff",
                short_help="Highlight the differences between two log files.")
-@click.argument("csv-like-files", nargs=2, required=True)
+@click.argument("csv-like-file-1", nargs=1, required=True)
+@click.argument("csv-like-file-2", nargs=1, required=True)
 @click.option("--show-rows", type=int, required=False, default=100,
               help="Number of rows to print in detail.")
 def main(csv_like_files: list[str], show_rows: int):
-    """Compare the differences between two log files.
-    
-    Examine whether there are timestamps in one file that are missing the other
+    r"""Highlight the differences between two log files.
+
+    Examine whether there are timestamps in one file that are missing the in other
     and vice versa.
     """
     pd.options.display.max_rows = show_rows

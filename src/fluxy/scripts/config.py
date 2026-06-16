@@ -10,11 +10,12 @@ class NoAliasDumper(yaml.SafeDumper):
         return True
 
 
-@click.command(name="config")
+@click.command(name="config",
+               short_help="The configuration module.")
 @click.option("-p", "--print", "pprint", is_flag=True,
-              help="Print the default configuration")
+              help="Print the default configuration.")
 def main(pprint):
-    """Configuration module
+    """The configuration module.
     """
 
     if pprint:
