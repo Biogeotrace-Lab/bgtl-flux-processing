@@ -93,17 +93,19 @@ def main(csv_like_files: list[str], output):
     # Upsample to the same frequency incase of missing records.
     # Do not fill values.
     # This will also fail for duplicate timestamps.
-    resampled_concatenated_dataframes, gaps = find_timeseries_gaps(concatenated_dataframes)
+    resampled_concatenated_dataframes, tz_gaps = \
+        find_timeseries_gaps(concatenated_dataframes)
 
-    if len(gaps):
-        missing_rows = resampled_concatenated_dataframes.index[gaps]
+    if len(tz_gaps):
+        missing_rows = resampled_concatenated_dataframes.index[tz_gaps]
         logger.warning(Fore.LIGHTYELLOW_EX +
                        f"\nThere were {len(missing_rows)} missing "
                        "rows in the timeseries:"
                        f"\n{pd.Series(missing_rows)}")
 
     # Break timestamp to Year, DOY, Time.
-    resampled_concatenated_dataframes = add_year_doy_time(resampled_concatenated_dataframes)
+    resampled_concatenated_dataframes = \
+        add_year_doy_time(resampled_concatenated_dataframes)
 
     # Turn index to column and persist.
     # We can probably drop the RECORD column.
