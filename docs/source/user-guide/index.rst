@@ -6,5 +6,5 @@ TODO
 .. toctree::
    :maxdepth: 1
 
-   utils
-
+   examples-cli
+   examples-api

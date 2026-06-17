@@ -72,8 +72,8 @@ html_theme_options = {
 
     "icon_links": [
         {
-            "name": "Organization",
-            "url": "https://your-organization.org",
+            "name": "Biogeotrace Lab",
+            "url": "https://biogeotrace.com",
             "icon": "fa-solid fa-building",  # Uses FontAwesome icons
             "type": "fontawesome",
         },],
@@ -85,3 +85,5 @@ html_theme_options = {
 html_css_files = [
     'config.css',
 ]
+
+html_favicon = "_static/fav.png"

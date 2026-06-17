@@ -213,3 +213,4 @@ __marimo__/
 *.7zip
 
 _version.py
+*MetData/

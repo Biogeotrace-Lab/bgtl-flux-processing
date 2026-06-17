@@ -6,4 +6,5 @@ TODO
 .. toctree::
    :maxdepth: 1
 
-   utils
+   how-to-contribute
+   add-cli-command
