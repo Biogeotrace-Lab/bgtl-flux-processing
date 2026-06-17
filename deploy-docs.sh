@@ -3,6 +3,7 @@ set -e
 echo Building docs.
 
 cd docs;
+make clean;
 make html;
 cd ..
 

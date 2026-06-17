@@ -1,14 +1,12 @@
-API Documentation
+API Reference
 =================
 
 TODO
 
 .. toctree::
    :maxdepth: 1
+   :hidden:
+   :caption: API Reference
+   :glob:
 
-   module1
-   utils.config
-   utils.conversions
-   utils.paths
-   utils.timeseries_checks
-
+   *

@@ -82,6 +82,7 @@ html_theme_options = {
     "footer_center": ["copyright"],
     "footer_end": ["nothing.html"]
 }
+
 html_css_files = [
     'config.css',
 ]
