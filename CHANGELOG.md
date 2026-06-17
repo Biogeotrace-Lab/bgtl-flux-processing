@@ -1,3 +1,8 @@
+## [0.0.1] - 2026-06-17
+
+### 🐛 Bug Fixes
+
+- Fixed bad argument definition in log_diff function signature that caused log-diff command to crush
 ## [0.0.0] - 2026-06-17
 
 ### 🚀 Features
