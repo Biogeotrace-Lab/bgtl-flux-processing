@@ -34,8 +34,8 @@ def main(csv_like_files: list[str], output):
     csv file from multiple source files of raw and uncertain nature.
 
     It individually checks every provided CSV for overlaps and tries to handle
-    them and if duplicate timestamps pass into the concatenated file, the process
-    fails.
+    them and if duplicate timestamps pass into the concatenated file, the
+    process fails.
     """
     config = get_config()
     dataframes = []
@@ -53,15 +53,18 @@ def main(csv_like_files: list[str], output):
 
         while tzcheck:
 
-            logger.info(Fore.LIGHTRED_EX + "Potential timezone issue at rows: \n" +
+            logger.info(Fore.LIGHTRED_EX +
+                        "Potential timezone issue at rows: \n" +
                         f"{df.iloc[tzsuspects]}. " +
                         "Add 'TZ_issue' in config.yaml")
 
             rs, all_gaps, tz_gaps = find_timezone_shift(df, tzsuspects)
-            logger.info(f"\nLikely occured at\n{pd.Series(rs.iloc[tz_gaps].index)}")
+            logger.info(Fore.LIGHTYELLOW_EX +
+                        "\nLikely occured at\n"
+                        f"{pd.Series(rs.iloc[tz_gaps].index)}")
 
             proceed = input("Attempt fixing? y/n: ")
-            
+
             if proceed == "y":
                 # Fix tz issues
                 df = fix_timezone_issue(df, tzsuspects)
@@ -69,7 +72,16 @@ def main(csv_like_files: list[str], output):
             else:
                 logger.info("Aborting.")
                 sys.exit(1)
+            
+        
+        dupl = find_timeseries_duplicates(df)
+        
+        if dupl.size:
+            raise RuntimeError(Fore.LIGHTRED_EX +
+                               f"Duplicate rows in file {csv_path}\n"
+                                f"{dupl}")
 
+        df = add_year_doy_time(df)
         dataframes.append(df)
 
     # Run concatenation and sort.
@@ -84,14 +96,11 @@ def main(csv_like_files: list[str], output):
 
     # Explicitly fail on persistent duplicate indices.
     if duplicated.any():
-        raise RuntimeError(f"""
-            {duplicated.sum()} duplicated values
-            in the timeseries of shape {concatenated_dataframes.shape}.
-            Fix before proceeding.
-
-            Duplicated rows:                        
-            {concatenated_dataframes[duplicated]}
-            """)
+        raise RuntimeError(f"{duplicated.sum()} duplicated values "
+            f"in the timeseries of shape {concatenated_dataframes.shape}."
+            "\nFix before proceeding."
+            " Duplicated rows:        "                
+            f"\n{concatenated_dataframes[duplicated]}")
 
     # Upsample to the same frequency incase of missing records.
     # Do not fill values.
@@ -103,7 +112,7 @@ def main(csv_like_files: list[str], output):
         missing_rows = resampled_concatenated_dataframes.index[tz_gaps]
         logger.warning(Fore.LIGHTYELLOW_EX +
                        f"\nThere were {len(missing_rows)} missing "
-                       "rows in the timeseries:"
+                       "rows in the timeseries:\n"
                        f"\n{pd.Series(missing_rows)}")
 
     # Break timestamp to Year, DOY, Time.
