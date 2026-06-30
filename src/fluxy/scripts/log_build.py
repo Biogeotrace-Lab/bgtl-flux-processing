@@ -88,6 +88,7 @@ def main(csv_like_files: list[str], output):
     # We can sort because incase of duplicates it fails later.
     concatenated_dataframes = pd.concat(dataframes).sort_index()
     concatenated_dataframes.drop_duplicates(
+        # Don't include record in the duplication equality check.
         subset=concatenated_dataframes.columns.difference(["RECORD"]),
         inplace=True)
 
