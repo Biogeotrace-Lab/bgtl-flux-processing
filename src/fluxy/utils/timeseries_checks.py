@@ -69,7 +69,23 @@ def fix_timezone_issue(df: pd.DataFrame, suspects: np.ndarray):
     of the timeseries.
 
     Use this function to automatically find and correct overlapping
-    periods due to accidental timezone differences
+    periods due to accidental timezone differences.
+
+    Objectives:
+
+    **1. End index.**
+    
+    The end index must be the exclusive end of
+    the duplicated period. That means position of `end_date + 1`.
+    In an array of even number of elements, that is `len(array) // 2`.
+
+    The count of gaps after this date (index) has to be subtracted from
+    the final number.
+
+    **2. Start index.**
+
+    The first element of candidate gaps. The count of gaps before this date
+    (index) has to be subtracted from the final number.
     """
     _, all_gaps, candidate_gaps = find_timezone_shift(df, suspects)
     # Get a mutable copy of indices (Alternatively reset index and reset).
