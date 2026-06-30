@@ -13,7 +13,8 @@ def potential_timezone_issue(df: pd.DataFrame):
     sequential = False
     if not duplicates.empty:
         sequence = np.arange(duplicates['RECORD'].iloc[0], duplicates['RECORD'].iloc[-1] + 1)
-        # If record shows same range as sequence, there are no jumps.
+        # If the sequences are of the same length, no jumps should exist
+        # and the records should be sequential.
         sequential = duplicates['RECORD'].shape[0] == sequence.shape[0]
     return are_even and sequential, *np.where(df.index.isin(duplicates.index))
 
