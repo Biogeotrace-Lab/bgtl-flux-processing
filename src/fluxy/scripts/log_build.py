@@ -13,9 +13,6 @@ from fluxy.utils.timeseries_checks import fix_timezone_issue
 
 import click
 
-from colorama import Fore
-from colorama import Style
-
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -23,10 +20,11 @@ logging.basicConfig(level=logging.INFO)
 
 @click.command(name="log-build",
                short_help="Build a complete timeseries "
-               "from multiple csv-like sources.")
+               "from multiple csv sources.")
 @click.argument("csv-like-files", nargs=-1, required=True)
 @click.option("--output", default="Met30min.csv",
-              help="The output file for the built meteorological dataset.")
+              help="The output file for the built meteorological dataset. "
+              "Defaults to 'output.csv'")
 def main(csv_like_files: list[str], output):
     """Build a complete timeseries from multiple csv-like sources.
 
@@ -37,7 +35,6 @@ def main(csv_like_files: list[str], output):
     them and if duplicate timestamps pass into the concatenated file, the
     process fails.
     """
-    config = get_config()
     dataframes = []
     for csv_path in csv_like_files:
         logger.info(f"{csv_path}")
@@ -53,15 +50,14 @@ def main(csv_like_files: list[str], output):
 
         while tzcheck:
 
-            logger.info(Fore.LIGHTRED_EX +
-                        "Potential timezone issue at rows: \n" +
-                        f"{df.iloc[tzsuspects]}. " +
-                        "Add 'TZ_issue' in config.yaml")
+            click.secho("Potential timezone issue at rows: \n" +
+                       f"{df.iloc[tzsuspects]}. " +
+                       "Add 'TZ_issue' in config.yaml", fg='bright_red')
 
             rs, all_gaps, tz_gaps = find_timezone_shift(df, tzsuspects)
-            logger.info(Fore.LIGHTYELLOW_EX +
-                        "\nLikely occured at\n"
-                        f"{pd.Series(rs.iloc[tz_gaps].index)}")
+            click.secho("Likely occured at\n"
+                       f"{pd.Series(rs.iloc[tz_gaps].index)}",
+                       fg='bright_yellow')
 
             proceed = input("Attempt fixing? y/n: ")
 
@@ -70,16 +66,16 @@ def main(csv_like_files: list[str], output):
                 df = fix_timezone_issue(df, tzsuspects)
                 tzcheck, tzsuspects = potential_timezone_issue(df)
             else:
-                logger.info("Aborting.")
+                click.echo("Aborting.")
                 sys.exit(1)
-            
         
         dupl = find_timeseries_duplicates(df)
         
         if dupl.size:
-            raise RuntimeError(Fore.LIGHTRED_EX +
-                               f"Duplicate rows in file {csv_path}\n"
-                                f"{dupl}")
+            raise RuntimeError(click.style(
+                f"Duplicate rows in file {csv_path}\n {dupl}",
+                bold=True
+                ))
 
         df = add_year_doy_time(df)
         dataframes.append(df)
@@ -111,10 +107,9 @@ def main(csv_like_files: list[str], output):
 
     if len(tz_gaps):
         missing_rows = resampled_concatenated_dataframes.index[tz_gaps]
-        logger.warning(Fore.LIGHTYELLOW_EX +
-                       f"\nThere were {len(missing_rows)} missing "
+        logger.warning(click.style(f"\nThere were {len(missing_rows)} missing "
                        "rows in the timeseries:\n"
-                       f"\n{pd.Series(missing_rows)}")
+                       f"\n{pd.Series(missing_rows)}"), fg="bright_yellow")
 
     # Break timestamp to Year, DOY, Time.
     resampled_concatenated_dataframes = \
@@ -123,9 +118,9 @@ def main(csv_like_files: list[str], output):
     # Turn index to column and persist.
     # We can probably drop the RECORD column.
     resampled_concatenated_dataframes.to_csv(output)
-    logger.info(Fore.LIGHTGREEN_EX +
-                "Successfully created a new log file containing "
-                f"{resampled_concatenated_dataframes.shape[0]} rows.")
+    click.secho("Successfully created a new log file containing "
+                f"{resampled_concatenated_dataframes.shape[0]} rows.",
+                fg="bright_green")
     return 0
 
 
