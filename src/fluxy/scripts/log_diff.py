@@ -5,9 +5,6 @@ import pandas as pd
 
 from fluxy.io.csv import load_timeseries
 
-from colorama import Fore
-from colorama import Style
-
 
 logger = logging.getLogger(__name__)
 
@@ -31,11 +28,11 @@ def main(csv_like_file_1: str, csv_like_file_2: str, show_rows: int):
     _1vs2 = ~dataframe_1.index.isin(dataframe_2.index)
     _2vs1 = ~dataframe_2.index.isin(dataframe_1.index)
 
-    logger.info(Fore.LIGHTGREEN_EX + f"{csv_like_file_1}++ Extra Timestamps\n"
-                f"{dataframe_1[_1vs2]}")
+    click.secho(f"{csv_like_file_1}++ Extra Timestamps\n"
+                f"{dataframe_1[_1vs2]}", fg='bright_green')
 
-    logger.info(Fore.LIGHTRED_EX + f"{csv_like_file_1}-- Lacking Timestamps\n"
-                f"{dataframe_2[_2vs1]}")
+    click.secho(f"{csv_like_file_1}-- Missing Timestamps\n"
+                f"{dataframe_2[_2vs1]}", fg='bright_red') 
 
     return 0
 
