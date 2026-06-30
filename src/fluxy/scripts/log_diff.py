@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
                short_help="Highlight the differences between two log files.")
 @click.argument("csv-like-file-1", nargs=1, required=True)
 @click.argument("csv-like-file-2", nargs=1, required=True)
-@click.option("--show-rows", type=int, required=False, default=100,
+@click.option("--show-rows", type=int, required=False, default=1000,
               help="Number of rows to print in detail.")
 def main(csv_like_file_1: str, csv_like_file_2: str, show_rows: int):
     r"""Highlight the differences between two log files.
@@ -31,12 +31,10 @@ def main(csv_like_file_1: str, csv_like_file_2: str, show_rows: int):
     _1vs2 = ~dataframe_1.index.isin(dataframe_2.index)
     _2vs1 = ~dataframe_2.index.isin(dataframe_1.index)
 
-    logger.info(Fore.LIGHTRED_EX + f"Timestamps in {csv_like_file_1} "
-                f"missing from {csv_like_file_2}\n"
+    logger.info(Fore.LIGHTGREEN_EX + f"{csv_like_file_1}++ Extra Timestamps\n"
                 f"{dataframe_1[_1vs2]}")
 
-    logger.info(Fore.LIGHTGREEN_EX + f"Timestamps in {csv_like_file_2} "
-                f"missing from {csv_like_file_1}\n"
+    logger.info(Fore.LIGHTRED_EX + f"{csv_like_file_1}-- Lacking Timestamps\n"
                 f"{dataframe_2[_2vs1]}")
 
     return 0
