@@ -90,21 +90,31 @@ def fix_timezone_issue(df: pd.DataFrame, suspects: np.ndarray):
     _, all_gaps, candidate_gaps = find_timezone_shift(df, suspects)
     # Get a mutable copy of indices (Alternatively reset index and reset).
     datetime_indices = df.index.to_numpy().copy()
-    # Single use case for now.
-    assert not len(suspects) % 4
-    assert not len(candidate_gaps) % (len(suspects) // 2), candidate_gaps
-    # The 1st gap position is where the time change occured.
-    start_index = candidate_gaps[0]
-    # Get any number of other gaps not related to TZ shift inbetween.
-    off_idx = np.where(all_gaps == candidate_gaps[-1])[0][0] + 1
-    end_index_negative_offset = all_gaps[off_idx:].size
-    # The middle of the suspects + 1 for slicing is the last affected record.
-    # Subtract any unrelated gaps from end_index.
-    end_index = suspects[-1] - len(suspects) // 2 + 1 - \
-        end_index_negative_offset
 
-    # Offset back to UTC from GMT+1
-    # We need to get half the duplicates 
+    # Overlaps due to timezone change must be hourly
+    # (even number x2 - an hour is 4 records in this case)
+    assert not len(suspects) % 4
+    # The gaps must be of length half that of the overlap suspects.
+    assert not len(candidate_gaps) % (len(suspects) // 2), candidate_gaps
+    
+    # Turn all gaps into a list for using the convenience of
+    # using the `.index` method.
+    raw_end = suspects[suspects.size // 2]
+    raw_start = candidate_gaps[0]
+
+    # Calculate the end index of the affected period.
+    # Add any unrelated gap (single gaps) between the last candidate gap
+    # and the inclusive period end. These will push the `end_index` further
+    # during resampling and they need to be subtracted.
+    post_voids_count = sum(map(lambda x: candidate_gaps[-1] < x < raw_end,
+                               all_gaps))
+    end_index = raw_end - post_voids_count
+
+    # Calculate the starting index of the affected period.
+    pre_voids_count = sum(map(lambda x: x < raw_start , all_gaps))
+    start_index = candidate_gaps[0] - pre_voids_count
+
+    # Modify the affected period in place.
     datetime_indices[start_index:end_index] = \
         datetime_indices[start_index:end_index] - \
             pd.Timedelta(f"{len(suspects) // 4} hour")
