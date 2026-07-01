@@ -9,7 +9,7 @@ from pathlib import Path
 import logging
 
 colorama.init(autoreset=True, wrap=True)
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 
 SCRIPTS = Path(__file__).parent / "scripts"
 
