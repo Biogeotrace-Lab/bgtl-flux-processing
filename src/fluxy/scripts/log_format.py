@@ -11,63 +11,71 @@ from ..utils.conversions import add_year_doy_time
 from ..io.csv import load_timeseries
 
 from ..utils.paths import change_directory
+from ..io.csv import show_dataframe_warn_and_modify_inplace
+from ..utils.timeseries_checks import find_timeseries_gaps
 
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
 
 
 @click.command(name="log-format", short_help="Format log files.")
-@click.argument("csv-like-files", nargs=-1, required=True)
-@click.option("--recover-timestamp", is_flag=True,
-              help="Recover TIMESTAMP from Year, DOY, Time columns")
-@click.option("--amend-records", is_flag=True,
-              help="Try to amend RECORD column destruction")
+
+@click.argument("csv-log-file", nargs=1, required=True)
+
+@click.option("--add-missing-rows", is_flag=True,
+              help="Fill in missing timestamps with empty rows (resample).")
+@click.option("--add-timestamp", is_flag=True,
+              help="Recover TIMESTAMP from Year, DOY, Time columns.")
+@click.option("--add-records", is_flag=True,
+              help="Add a RECORD column.")
 @click.option("--add-doy", is_flag=True,
-              help="Create Year, DOY, "
-              "Time columns from TIMESTAMP (Day-end 2400H)")
-@click.option("--outfolder", type=Path,
-              help="Write formatted files to output folder",
-              required=False)
-@click.option("--inplace", is_flag=True, help="Modify files inplace")
-@click.option("-p", "--print", "pprint", is_flag=True,
-              help="Print the result in stdout (terminal)")
-def main(csv_like_files: list[str], recover_timestamp: bool,
-         amend_records: bool, add_doy: bool, outfolder: Path,
-         inplace: bool, pprint: bool):
-    """Format log files and try to recover lost information, such as
-    timestamps.
+              help="Create Year, DOY, Time columns from TIMESTAMP "
+              "(End of day @2400H).")
+@click.option("--inplace", is_flag=True, help="Modify file inplace.")
+
+@click.option("--output", type=Path, required=False,
+              help="Write formatted file to destination.")
+
+def main(csv_log_file: Path, add_timestamp: bool,
+         add_missing_rows: bool, add_records: bool,
+         add_doy: bool, output: Path, inplace: bool):
+    """Format log files to specification as needed.
     """
-    for csv_path in csv_like_files:
-        logger.info(f"{csv_path}")
 
-        df = load_timeseries(csv_path)
+    click.echo(f"{csv_log_file}")
+    df = load_timeseries(csv_log_file)
 
-        if recover_timestamp:
-            df = recover_timestamp_from_doy(df)
-            logger.info("Recovered timestamp column")
-        
-        if amend_records:
-            recover_records(df)
-            logger.info("Added records column")
-        
-        if add_doy:
-            df = add_year_doy_time(df)
-            logger.info("Created Year, DOY and Time columns "
-                        "with 2400H as end-of-day")
+    if add_timestamp:
+        df = add_timestamp_from_doy(df)
+        click.echo("Added timestamp column")
 
-        if inplace:
-            df.to_csv(csv_path)
-            logger.info("Modified inplace")
-        
-        if outfolder:
-            outfolder.mkdir(parents=True, exist_ok=True)
-            new_csv_path = change_directory(csv_path, outfolder)
-            df.to_csv(new_csv_path)
-            logger.info(f"Formatted version written at {new_csv_path}")
+    if add_missing_rows:
+        df, _ = find_timeseries_gaps(df)
+        click.echo(f"Added {_.size} missing rows")
 
-        if pprint:
-            logger.info(f"\n{df}")
+    if add_records:
+        add_records_column(df)
+        click.echo("Added records column")
+
+    if add_doy:
+        df = add_year_doy_time(df)
+        click.echo("Created Year, DOY and Time columns.")
+
+    # Show modified DataFrame.
+    click.echo(df)
+
+    # Persistance. No modification beyond this point.
+    if output:
+        df.to_csv(output, mode='x')
+        click.secho(f"Formatted file written at {output}.",
+                    bold=True)
+    elif inplace:
+        show_dataframe_warn_and_modify_inplace(df, csv_log_file)
+        click.secho("Modified file inplace.",
+                    bold=True)
+    else:
+        click.secho("Changes not saved. Use --inplace or define --output.",
+                    bold=True)
 
     return 0
 
