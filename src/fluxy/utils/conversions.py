@@ -91,7 +91,7 @@ def get_minmax_arrays(config: SiteConfig):
     return lower_limits, upper_limits
 
 
-def recover_timestamp_from_doy(df: pd.DataFrame):
+def add_timestamp_from_doy(df: pd.DataFrame):
     """Try to undo TIMESTAMP drop. Assumes series is timestamp-filled and
     tries to get rid of empty rows.
     """
@@ -118,7 +118,7 @@ def recover_timestamp_from_doy(df: pd.DataFrame):
     return df.set_index("TIMESTAMP")
 
 
-def recover_records(df: pd.DataFrame):
+def add_records_column(df: pd.DataFrame):
     """Try to amend a broken RECORD column.
 
     Should this require a TIMESTAMPed dataframe?

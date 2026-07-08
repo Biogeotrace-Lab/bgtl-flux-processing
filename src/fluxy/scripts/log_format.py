@@ -4,8 +4,8 @@ import logging
 
 from pathlib import Path
 
-from ..utils.conversions import recover_timestamp_from_doy
-from ..utils.conversions import recover_records
+from ..utils.conversions import add_timestamp_from_doy
+from ..utils.conversions import add_records_column
 from ..utils.conversions import add_year_doy_time
 
 from ..io.csv import load_timeseries
