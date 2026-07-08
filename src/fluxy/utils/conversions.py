@@ -124,6 +124,10 @@ def add_records_column(df: pd.DataFrame):
     Should this require a TIMESTAMPed dataframe?
     """
     assert df.index.name == "TIMESTAMP"
+    _, gaps = find_timeseries_gaps(df)
+    if gaps.size:
+        raise RuntimeError("Can't add RECORD column "
+                           "to a timeseries with gaps.")
     df.insert(0, "RECORD", range(df.shape[0]))
     return df
 
