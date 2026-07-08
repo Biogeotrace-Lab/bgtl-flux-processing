@@ -38,7 +38,6 @@ def show_dataframe_warn_and_modify_inplace(df: pd.DataFrame,
                                            path: str) -> None:
     """Bundle mechanism for modifying CSV files in place safely.
     """
-    click.echo(df)
     if prompt_yes_or_abort("Modify file inplace?"):
         df.to_csv(path)
 
