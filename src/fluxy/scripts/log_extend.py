@@ -119,7 +119,7 @@ def main(extension: str, master: str, recover: bool, show_rows: int):
     ]
 
     if not csv_indices_past.empty and \
-        not passes_check_report("Extension starts after master",
+        not passes_check_report("Extension is newer than master",
                                 ms_start < csv_indices_past[0]):
         raise RuntimeError("Extension is older than master file. "
                            "Did you choose the correct files?")
