@@ -1,3 +1,20 @@
+## [0.1.0] - 2026-07-08
+
+### 🚀 Features
+
+- Updated `log-format` to add missing rows and have additional safety measures
+- Updated `check-gaps` to run for single file
+- Implemented `check-duplicates` command for timestamp duplication checks
+- Added overwrite confirmation for --output in log-format
+- Added `log-extend` command to be safely extending log master files with new data
+
+### 🐛 Bug Fixes
+
+- Fixed bug in `fix_timezone_issue`
+
+### 📚 Documentation
+
+- Improved documentation
 ## [0.0.1] - 2026-06-17
 
 ### 🐛 Bug Fixes
