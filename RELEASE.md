@@ -2,7 +2,8 @@
 
 #### **Important**
 Before releasing a new version, **all changes must be commited** with no loose files
-and unstaged changes.
+and unstaged changes. If any changes are unstaged `setuptools-scp` will build
+a development release during CI builds, instead of an official build.
 
 
 1. Run `git-cliff --bump` to update the change log and bump the version.
