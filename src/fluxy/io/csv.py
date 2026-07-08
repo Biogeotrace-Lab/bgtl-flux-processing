@@ -34,7 +34,7 @@ def load_timeseries(csv_path: str | Path | os.PathLike,
     raise RuntimeError(f"Couldn't load timeseries {csv_path} with error\n {error}")
 
 
-def dataframe_verify_inplace_modification(df: pd.DataFrame,
+def dataframe_confirm_inplace_modification(df: pd.DataFrame,
                                            path: str) -> None:
     """Bundle mechanism for modifying CSV files in place safely.
     """

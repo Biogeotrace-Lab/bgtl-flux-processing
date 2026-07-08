@@ -11,7 +11,7 @@ from ..utils.conversions import add_year_doy_time
 from ..io.csv import load_timeseries
 
 from ..utils.paths import change_directory
-from ..io.csv import show_dataframe_warn_and_modify_inplace
+from ..io.csv import dataframe_confirm_inplace_modification
 from ..utils.timeseries_checks import find_timeseries_gaps
 
 
@@ -70,7 +70,7 @@ def main(csv_log_file: Path, add_timestamp: bool,
         click.secho(f"Formatted file written at {output}.",
                     bold=True)
     elif inplace:
-        show_dataframe_warn_and_modify_inplace(df, csv_log_file)
+        dataframe_confirm_inplace_modification(df, csv_log_file)
         click.secho("Modified file inplace.",
                     bold=True)
     else:
