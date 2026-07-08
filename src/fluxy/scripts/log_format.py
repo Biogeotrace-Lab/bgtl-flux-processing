@@ -67,12 +67,10 @@ def main(csv_log_file: Path, add_timestamp: bool,
     # Persistance. No modification beyond this point.
     if output:
         df.to_csv(output, mode='x')
-        click.secho(f"Formatted file written at {output}.",
-                    bold=True)
+        click.secho(f"Formatted file written at {output}.", bold=True)
     elif inplace:
         dataframe_confirm_inplace_modification(df, csv_log_file)
-        click.secho("Modified file inplace.",
-                    bold=True)
+        click.secho("Modified file inplace.", bold=True)
     else:
         click.secho("Changes not saved. Use --inplace or define --output.",
                     bold=True)

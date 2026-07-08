@@ -38,8 +38,8 @@ def dataframe_confirm_inplace_modification(df: pd.DataFrame,
                                            path: str) -> None:
     """Bundle mechanism for modifying CSV files in place safely.
     """
-    if prompt_yes_or_abort("Modify file inplace?"):
-        df.to_csv(path)
+    prompt_yes_or_abort("Modify file inplace?")
+    df.to_csv(path)
 
 
 def dataframe_write_if_not_exists(df: pd.DataFrame, path: str) -> None:
