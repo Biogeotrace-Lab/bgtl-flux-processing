@@ -42,11 +42,9 @@ def dataframe_confirm_inplace_modification(df: pd.DataFrame,
     df.to_csv(path)
 
 
-def dataframe_write_if_not_exists(df: pd.DataFrame, path: str) -> None:
-    """Bundle mechanism for modifying CSV files in place safely.
+def dataframe_confirm_overwrite(df: pd.DataFrame, path: str | Path) -> None:
+    """Overwrite confirmation mechanism for writing csv files safely.
     """
-    if not os.path.exists(path):
-        df.to_csv(path)
-    else:
-        click.echo("File already exists.")
-        raise click.Abort()
+    if os.path.exists(path):
+        prompt_yes_or_abort("File already exists. Overwrite?")
+    df.to_csv(path)
