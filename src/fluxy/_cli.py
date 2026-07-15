@@ -1,6 +1,6 @@
 """Dynamically build the command line suite.
 """
-
+import os
 import click
 import importlib
 import colorama
@@ -49,6 +49,8 @@ def main():
         # and explore the commands in the terminal
         $ fluxy --help
     """
+    APPDIR = click.get_app_dir(str(main.name))
+    os.makedirs(APPDIR, exist_ok=True)
 
 
 for path in SCRIPTS.glob("[!_]*.py"):
