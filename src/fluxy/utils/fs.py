@@ -61,3 +61,8 @@ def recover_backup(src: str | os.PathLike) -> None:
         raise click.Abort()
 
     sys.exit(0)
+
+
+def confirm_to_recover_backup(src: str | os.PathLike) -> None:
+    confirm_or_abort(f"Recover backup for {src}?")
+    recover_backup(src)
