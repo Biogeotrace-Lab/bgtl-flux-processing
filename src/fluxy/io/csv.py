@@ -43,8 +43,8 @@ def dataframe_confirm_inplace_modification(df: pd.DataFrame,
     click.echo("File modified inplace.")
 
 
-def dataframe_confirm_overwrite(df: pd.DataFrame, path: str | Path) -> None:
-    """Overwrite confirmation mechanism for writing csv files safely.
+def dataframe_confirm_if_overwrite(df: pd.DataFrame, path: str | Path) -> None:
+    """If destination exists, confirm to overwrite.
     """
     if os.path.exists(path):
         prompt_yes_or_abort("File already exists. Overwrite?")

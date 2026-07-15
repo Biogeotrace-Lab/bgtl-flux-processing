@@ -1,19 +1,24 @@
 import click
 
 
-def prompt_yes_or_abort(msg: str) -> bool:
+_CONFIRMATION_FORMAT = " [y/N]: "
+
+
+def confirm_or_abort(msg: str) -> bool:
     """Return True if possitive user input, Abort otherwise.
     """
-    if input(click.style(msg + " [y/N]: ", bold=True)).lower() == "y":
+    if input(click.style(msg + _CONFIRMATION_FORMAT,
+                         bold=True)).lower() == "y":
         return True
 
     raise click.Abort()
 
 
-def prompt_yes_or_false(msg: str) -> bool:
+def confirm(msg: str) -> bool:
     """Return True if possitive user input, False otherwise.
     """
-    if input(click.style(msg + " y/n: ", bold=True)) == "y":
+    if input(click.style(msg + _CONFIRMATION_FORMAT,
+                         bold=True)).lower() == "y":
         return True
 
     return False
