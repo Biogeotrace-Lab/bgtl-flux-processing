@@ -11,8 +11,8 @@ from ..utils.conversions import add_year_doy_time
 from ..io.csv import load_timeseries
 
 from ..utils.paths import change_directory
-from ..io.csv import dataframe_confirm_inplace_modification
-from ..io.csv import dataframe_confirm_overwrite
+from ..io.csv import dataframe_confirm_inplace_modification_with_backup
+from ..io.csv import dataframe_confirm_if_overwrite
 from ..utils.timeseries_checks import find_timeseries_gaps
 from ..utils.fs import recover_backup
 
@@ -68,11 +68,9 @@ def main(csv_log_file: Path, add_timestamp: bool, add_missing_rows: bool,
 
     # Persistance. No modification beyond this point.
     if output:
-        dataframe_confirm_overwrite(df, output)
-        click.echo(f"Formatted file written at {output}.")
+        dataframe_confirm_if_overwrite(df, output)
     elif inplace:
-        dataframe_confirm_inplace_modification(df, csv_log_file)
-        click.echo("File modified inplace.")
+        dataframe_confirm_inplace_modification_with_backup(df, csv_log_file)
     else:
         click.secho("Changes not saved. Use --inplace or define --output.",
                     bold=True)
