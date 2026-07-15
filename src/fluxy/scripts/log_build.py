@@ -2,14 +2,16 @@ import pandas as pd
 import sys
 import logging
 
-from fluxy.utils.config import get_config
-from fluxy.io.csv import load_timeseries
-from fluxy.utils.conversions import add_year_doy_time
-from fluxy.utils.timeseries_checks import find_timeseries_duplicates
-from fluxy.utils.timeseries_checks import potential_timezone_issue
-from fluxy.utils.timeseries_checks import find_timeseries_gaps
-from fluxy.utils.timeseries_checks import find_timezone_shift
-from fluxy.utils.timeseries_checks import fix_timezone_issue
+from ..utils.config import get_config
+from ..io.csv import load_timeseries
+from ..io.csv import dataframe_confirm_if_overwrite
+from ..utils.conversions import add_year_doy_time
+from ..utils.timeseries_checks import find_timeseries_duplicates
+from ..utils.timeseries_checks import potential_timezone_issue
+from ..utils.timeseries_checks import find_timeseries_gaps
+from ..utils.timeseries_checks import find_timezone_shift
+from ..utils.timeseries_checks import fix_timezone_issue
+from ..utils.prompt import confirm_or_abort
 
 import click
 
@@ -59,15 +61,12 @@ def main(csv_like_files: list[str], output):
                        f"{pd.Series(rs.iloc[tz_gaps].index)}",
                        fg='bright_yellow')
 
-            proceed = input("Attempt fixing? y/n: ")
+            confirm_or_abort("Attempt fixing timezone issue?")
 
-            if proceed == "y":
-                # Fix tz issues
-                df = fix_timezone_issue(df, tzsuspects)
-                tzcheck, tzsuspects = potential_timezone_issue(df)
-            else:
-                click.echo("Aborting.")
-                sys.exit(1)
+            # Fix tz issues
+            df, (start, end, delta) = fix_timezone_issue(df, tzsuspects)
+            tzcheck, tzsuspects = potential_timezone_issue(df)
+
         
         dupl = find_timeseries_duplicates(df)
         
@@ -117,7 +116,7 @@ def main(csv_like_files: list[str], output):
 
     # Turn index to column and persist.
     # We can probably drop the RECORD column.
-    resampled_concatenated_dataframes.to_csv(output)
+    dataframe_confirm_if_overwrite(resampled_concatenated_dataframes, output)
     click.secho("Successfully created a new log file containing "
                 f"{resampled_concatenated_dataframes.shape[0]} rows.",
                 fg="bright_green")
@@ -125,5 +124,4 @@ def main(csv_like_files: list[str], output):
 
 
 if __name__ == "__main__":
-    sys.exit(main())
-
+    main()
