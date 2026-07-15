@@ -6,6 +6,7 @@ from pathlib import Path
 from ..utils.paths import get_filename
 from ..utils.paths import get_parent_directory
 from ..utils.paths import get_internal_backup_directory
+from ..utils.prompt import confirm_or_abort
 
 import click
 import glob
