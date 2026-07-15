@@ -87,6 +87,7 @@ def fix_timezone_issue(df: pd.DataFrame, suspects: np.ndarray):
     The first element of candidate gaps. The count of gaps before this date
     (index) has to be subtracted from the final number.
     """
+    df = df.copy()
     _, all_gaps, candidate_gaps = find_timezone_shift(df, suspects)
     # Get a mutable copy of indices (Alternatively reset index and reset).
     datetime_indices = df.index.to_numpy().copy()

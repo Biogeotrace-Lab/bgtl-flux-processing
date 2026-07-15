@@ -1,4 +1,5 @@
 import click
+import sys
 
 tick = chr(0x2714)
 ballot = chr(0x2718)
