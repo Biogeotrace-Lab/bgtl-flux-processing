@@ -3,7 +3,8 @@ from ..utils.config import DefaultOpts
 from ..utils.config import SiteConfig
 from ..utils.config import ReadCsvOpts
 from ..utils.config import get_default_config
-from ..utils.prompt import prompt_yes_or_abort
+from ..utils.prompt import confirm_or_abort
+from ..utils.fs import create_backup
 
 from typing import cast
 
@@ -32,6 +33,16 @@ def load_timeseries(csv_path: str | Path | os.PathLike,
             error = e
 
     raise RuntimeError(f"Couldn't load timeseries {csv_path} with error\n {error}")
+
+
+def dataframe_confirm_inplace_modification_with_backup(df: pd.DataFrame,
+                                                       path: str) -> None:
+    """Bundle mechanism for modifying CSV files in place safely.
+    """
+    confirm_or_abort("Create backup and modify file inplace?")
+    create_backup(path)
+    df.to_csv(path)
+    click.echo("File modified inplace.")
 
 
 def dataframe_confirm_inplace_modification(df: pd.DataFrame,
