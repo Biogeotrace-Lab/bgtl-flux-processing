@@ -1,3 +1,22 @@
+## [1.0.0] - 2026-07-15
+
+### 🚀 Features
+
+- [**breaking**] Moved backup system to use a dedicated internal app directory
+- Added confirm_to_recover_backup function that bundles confirmation prompting
+- Implemented command-specific backup convention
+- Implemented a `QualityControl` class that reports and exits with error code
+- Added backup recover feature in `log-format`
+- Added write safety features in `log-format`
+- Implemented Quality Control context manager in `log-extend`
+- Added `dataframe_confirm_inplace_modification_with_backup` function in io.csv
+- Added QC context manager in `check-duplicates`
+- Minimally implemented the `check-tz` command
+
+### 🐛 Bug Fixes
+
+- Updated `fix_timezone_issue` function to operate on a copy of the input dataframe instead of inplace
+- Fixed circular import problem in `utils.paths` while fetching app name
 ## [0.1.0] - 2026-07-08
 
 ### 🚀 Features
