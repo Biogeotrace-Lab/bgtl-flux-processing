@@ -14,7 +14,7 @@ from ..utils.paths import change_directory
 from ..io.csv import dataframe_confirm_inplace_modification
 from ..io.csv import dataframe_confirm_overwrite
 from ..utils.timeseries_checks import find_timeseries_gaps
-
+from ..utils.fs import recover_backup
 
 logger = logging.getLogger(__name__)
 
@@ -36,12 +36,13 @@ logger = logging.getLogger(__name__)
 
 @click.option("--output", type=Path, required=False,
               help="Write formatted file to destination.")
-
-def main(csv_log_file: Path, add_timestamp: bool,
-         add_missing_rows: bool, add_records: bool,
-         add_doy: bool, output: Path, inplace: bool):
+@click.option("--recover", is_flag=True, help="Undo last changes to log file.")
+def main(csv_log_file: Path, add_timestamp: bool, add_missing_rows: bool,
+         add_records: bool, add_doy: bool, output: Path, inplace: bool,
+         recover: bool):
     """Format log files to specification as needed.
     """
+    if recover: recover_backup(csv_log_file)
 
     click.echo(f"{csv_log_file}")
     df = load_timeseries(csv_log_file)
