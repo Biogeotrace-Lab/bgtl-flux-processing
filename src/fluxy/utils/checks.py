@@ -3,16 +3,29 @@ import click
 tick = chr(0x2714)
 ballot = chr(0x2718)
 
-def passes_check_report(msg: str, passing_condition: bool) -> bool:
+
+STATUS = {
+    True: ('bright_green', 'Pass', tick),
+    False: ('bright_red', 'Fail', ballot)
+}
+
+
+# This should be designed to be an autonomous binary gate. Like the confirmation
+# or abort prompts. If it passes, cool. If not, report and exit.
+def passes_quality_check(msg: str, passing_condition: bool,
+                         error_message: str = ''):
     """Construct a check report line according to a condition of
     pass or fail.
     """
-    color = "bright_green"
-    report_msg = f"{msg} {tick}"
-
-    if not passing_condition:
-        color = "bright_red"
-        report_msg = f"{msg} {ballot}"
+    color, result, mark = STATUS[passing_condition]
+    report_msg = f"Check - {msg}; {result} {mark}"
 
     click.secho(report_msg, fg=color)
-    return passing_condition
+    
+    if not passing_condition:
+        click.echo(error_message)
+        raise click.Abort()
+
+
+class QualityControl:
+    status = STATUS.copy()
