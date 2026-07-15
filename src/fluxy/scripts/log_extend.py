@@ -11,8 +11,8 @@ from ..utils.timeseries_checks import find_timeseries_gaps
 
 from ..utils.fs import create_backup
 from ..utils.fs import recover_backup
-from ..utils.prompt import prompt_yes_or_abort
-from ..utils.checks import passes_check_report
+from ..utils.prompt import confirm_or_abort
+from ..utils.checks import passes_quality_check
 
 logger = logging.getLogger(__name__)
 
@@ -28,31 +28,16 @@ logger = logging.getLogger(__name__)
 @click.option("--show-rows", type=int, required=False, default=1000,
               help="Number of rows to print in report.")
 def main(extension: str, master: str, recover: bool, show_rows: int):
-    r"""Extend a log master file with a csv extension candidate.
+    r"""Safely extend a log master file with a csv extension file.
 
-    Safety measures:
-    
-    Assert the log file candidate is a natural continuation of the masterfile.
-    If the candidate does not start immediately after the end of the
-    masterfile, the operation is aborted, as it would imply missing data.
-
-    The timestamps before the end of the master file will be ignored and
-    assumed validated by anterior operations.
-
-    Verbosely reports the rows that are about to be added and asks for
-    confirmation by the user, before modifying the master file.
-
-    Finally, before modifying, it makes a hidden backup in the master file's
-    directory for file recovery.
+    Asserts the extension is a continuation of the master file without jumps,
+    it has not gaps, or duplicated rows. Asks for confirmation to proceed.
     """
 
-    if recover and prompt_yes_or_abort("Recover master file?"):
+    if recover and confirm_or_abort("Recover master file?"):
 
         # Recover the backup file in the directory, if exists.
         recover_backup(master)
-        click.echo("Recovered master file from last backup.")
-
-        return 0
 
     pd.options.display.max_rows = show_rows
     pd.options.display.max_columns = 0
@@ -60,26 +45,26 @@ def main(extension: str, master: str, recover: bool, show_rows: int):
     # Load the extension candidate and add Year DOY Time columns.
     csv_dataframe = load_timeseries(extension)
 
-    # Verify extension index is sorted.
-    if not passes_check_report("Index sorted in extension",
-                               csv_dataframe.index.tolist() ==
-                               csv_dataframe.sort_index().index.to_list()):
-        raise RuntimeError("Extension indices are not sorted. "
-                           "Is the file corrupted?")
-
     # Extension needs to be resampled to 30 min intervals
     # and checked for duplicates.
     duplicates = find_timeseries_duplicates(csv_dataframe)
-    if not passes_check_report("No duplicates in extension", duplicates.empty):
-        raise RuntimeError("Candidate contains duplicate timestamps.")
+    passes_quality_check("Extension has no duplicates", duplicates.empty,
+                         "Candidate contains duplicate timestamps.")
+
+    # Verify extension index is sorted.
+    passes_quality_check("Extension index is sorted",
+                         csv_dataframe.index.tolist() ==
+                         csv_dataframe.sort_index().index.to_list(),
+                         "Extension indices are not sorted. "
+                         "Is the file corrupted?")
 
     # Force resampling to 30 min intervals.
     # This should not be the responsibility of this script.
     _, gaps = find_timeseries_gaps(csv_dataframe)
-
-    if not passes_check_report("No gaps in extension", gaps.size == 0):
-        raise RuntimeError("The extension candidate has gaps. "
-                           "It should be formatted first.")
+    passes_quality_check("Extension has no gaps",
+                         gaps.size == 0,
+                         "The extension candidate has gaps. "
+                         "It should be formatted first.")
 
     # Add year doy time to the extension candidate.
     csv_dataframe = add_year_doy_time(csv_dataframe)
@@ -89,9 +74,9 @@ def main(extension: str, master: str, recover: bool, show_rows: int):
 
     # Assert the columns are synchronized.
     col_difference = csv_dataframe.columns.difference(master_dataframe.columns)
-    if not passes_check_report("Columns match between files",
-                               col_difference.empty):
-        raise RuntimeError(f"Columns don't match {col_difference.tolist()}")
+    passes_quality_check("Files have matching columns",
+                         col_difference.empty,
+                         f"Columns don't match {col_difference.tolist()}")
 
     # The start timestamp of the master file.
     ms_start = master_dataframe.index[0]
@@ -109,31 +94,31 @@ def main(extension: str, master: str, recover: bool, show_rows: int):
         csv_indices_non_master > ms_end]
 
     # There is no data to add.
-    if not csv_indices_future.size:
-        click.secho("No new data to be added. Aborting.", bold=True)
-        raise click.Abort()
+    passes_quality_check("Extension has new data",
+                         csv_indices_future.size > 0)
 
     # Get the indices before the master file end.
     csv_indices_past = csv_indices_non_master[
         csv_indices_non_master < ms_end
     ]
 
-    if not csv_indices_past.empty and \
-        not passes_check_report("Extension is newer than master",
-                                ms_start < csv_indices_past[0]):
-        raise RuntimeError("Extension is older than master file. "
-                           "Did you choose the correct files?")
+    passes_quality_check("Extension is newer than master",
+                         not csv_indices_past.empty and
+                         ms_start <= csv_indices_past[0],
+                         "Extension is older than master file. "
+                         "Did you choose the correct files?")
 
     # The start of the future timestamps.
     future_start = csv_indices_future[0]
 
     # Check csv_dataframe is a continuation of master file.
     time_gap = future_start - ms_end
-    if not passes_check_report("Continuous extension", time_gap == pd.Timedelta("30 min")):
-        raise RuntimeError(
-            f"There is a time gap of {time_gap} between the master file "
-            "and candidate file. Are you missing data in the candidate file?\n"
-        )
+
+    passes_quality_check("Extension is continuation of master",
+                         time_gap == pd.Timedelta("30 min"),
+                         f"There is a time gap of {time_gap} between"
+                         "the master file and extension file. "
+                         "Are you missing data in between?")
 
     # Ignore overlapping rows.
     extension_dataframe = csv_dataframe.loc[csv_indices_future]
@@ -167,10 +152,9 @@ def main(extension: str, master: str, recover: bool, show_rows: int):
         bold=True
         )
 
-    if prompt_yes_or_abort("Write changes to master file?"):
+    if confirm_or_abort("Write changes to master file?"):
         # Backup process. Make a backup before continuing.
         create_backup(master)
-        click.echo("Created a master file backup.")
 
         # Write to disk.
         # Eventually we could explore only appending
