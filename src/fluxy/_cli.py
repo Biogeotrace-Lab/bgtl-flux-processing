@@ -53,6 +53,9 @@ def main(ctx: click.Context):
     APPDIR = click.get_app_dir(str(main.name))
     os.makedirs(APPDIR, exist_ok=True)
 
+    if ctx.info_name:
+        os.environ['app-name'] = ctx.info_name
+
     if ctx.invoked_subcommand is not None:
         os.environ['fluxy-command'] = ctx.invoked_subcommand
 

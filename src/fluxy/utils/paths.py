@@ -3,8 +3,6 @@ from pathlib import Path
 import os
 import click
 
-from .._cli import main
-
 
 def get_filename(path: str | os.PathLike | Path) -> str:
     """Return the filename at the end of the complete path.
@@ -31,7 +29,7 @@ def change_directory(path: str | os.PathLike | Path,
 
 def get_internal_app_directory():
     """Get the internal directory of the app."""
-    app_name = str(main.name)
+    app_name = os.environ['app-name']
     app_dir = click.get_app_dir(app_name)
     os.makedirs(app_dir, exist_ok=True)
     return Path(app_dir)
