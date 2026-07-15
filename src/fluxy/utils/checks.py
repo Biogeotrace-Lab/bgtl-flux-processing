@@ -6,6 +6,8 @@ from rich.table import Table
 from rich.console import Console
 from rich.text import Text
 
+from typing_extensions import deprecated
+
 
 tick = chr(0x2714)
 ballot = chr(0x2718)
@@ -17,20 +19,31 @@ STATUS = {
 }
 
 
-# This should be designed to be an autonomous binary gate. Like the confirmation
-# or abort prompts. If it passes, cool. If not, report and exit.
+@deprecated("Use the `QualityControl` class instead.")
 def passes_quality_check(msg: str, passing_condition: bool,
-                         error_message: str = ''):
+                         failure_message: str = ''):
     """Construct a check report line according to a condition of
     pass or fail.
     """
     color, result, mark = STATUS[passing_condition]
-    report_msg = f"Check - {msg}; {result} {mark}"
+    report_msg = click.style(f"Check - {msg}; {result} {mark}", color)
 
-    click.secho(report_msg, fg=color)
-    
     if not passing_condition:
-        click.echo(error_message)
+        report_msg += " " + click.style(failure_message, fg='bright_yellow')
+
+    click.echo(report_msg)
+    return passing_condition
+
+
+@deprecated("Use the `QualityControl` class instead.")
+def passes_quality_check_or_aborts(msg: str, passing_condition: bool,
+                                   failure_message: str = ''):
+    """Construct a check report line according to a condition of
+    pass or fail.
+
+    Exit if failure.
+    """
+    if not passes_quality_check(msg, passing_condition, failure_message):
         raise click.Abort()
 
 
