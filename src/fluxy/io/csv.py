@@ -36,10 +36,11 @@ def load_timeseries(csv_path: str | Path | os.PathLike,
 
 def dataframe_confirm_inplace_modification(df: pd.DataFrame,
                                            path: str) -> None:
-    """Bundle mechanism for modifying CSV files in place safely.
+    """Modify CSV file in place with confirmation.
     """
-    prompt_yes_or_abort("Modify file inplace?")
+    confirm_or_abort("Modify file inplace?")
     df.to_csv(path)
+    click.echo("File modified inplace.")
 
 
 def dataframe_confirm_overwrite(df: pd.DataFrame, path: str | Path) -> None:
