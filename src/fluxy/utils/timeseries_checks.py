@@ -116,13 +116,15 @@ def fix_timezone_issue(df: pd.DataFrame, suspects: np.ndarray):
     pre_voids_count = sum(map(lambda x: x < raw_start , all_gaps))
     start_index = candidate_gaps[0] - pre_voids_count
 
+    timedelta = pd.Timedelta(f"{len(suspects) // 4} hour")
+    period_start = datetime_indices[start_index]
+    period_end = datetime_indices[end_index]
     # Modify the affected period in place.
     datetime_indices[start_index:end_index] = \
-        datetime_indices[start_index:end_index] - \
-            pd.Timedelta(f"{len(suspects) // 4} hour")
+        datetime_indices[start_index:end_index] - timedelta
 
     # Replace index with corrected version.
     df.index = datetime_indices
     df.index.name = 'TIMESTAMP'
-    return df
+    return df, (start_index, end_index, timedelta)
 
