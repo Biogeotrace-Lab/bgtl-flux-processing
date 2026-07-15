@@ -19,11 +19,13 @@ dependencies = [
 "click",
 "pyyaml",
 "simpleeval",
-"colorama"
+"colorama",
+"rich",
+"typing_extensions"
 ]
 
 readme = "README.md"
-keywords = ["eddy", "covariance"]
+keywords = ["eddy", "covariance", "fluxes", "flux", "processing", "timeseries"]
 license = { text = "" }
 
 [project.urls]
