@@ -19,7 +19,9 @@ def _get_backup_path(name: str):
     backup_dir = get_internal_backup_directory()
     backups = glob.glob(str(backup_dir / ("." + name + "*")))
     version = len(backups)
-    return backup_dir / str("." + name + ".bak")
+    return backup_dir / ".{name}.bak~{command}".format(name=name,
+                                                       command=os.environ
+                                                       ['fluxy-command'])
 
 
 def copy_file(src: str | os.PathLike,

@@ -39,7 +39,8 @@ class SphinxCleanGroup(click.Group):
 
 
 @click.group(name="fluxy", cls=SphinxCleanGroup)
-def main():
+@click.pass_context
+def main(ctx: click.Context):
     r"""Welcome to Biogeotrace Lab's Fluxy -
     The command line suite for flux processing excellence.
 
@@ -51,6 +52,9 @@ def main():
     """
     APPDIR = click.get_app_dir(str(main.name))
     os.makedirs(APPDIR, exist_ok=True)
+
+    if ctx.invoked_subcommand is not None:
+        os.environ['fluxy-command'] = ctx.invoked_subcommand
 
 
 for path in SCRIPTS.glob("[!_]*.py"):
