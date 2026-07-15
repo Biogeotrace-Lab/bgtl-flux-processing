@@ -58,5 +58,7 @@ def dataframe_confirm_if_overwrite(df: pd.DataFrame, path: str | Path) -> None:
     """If destination exists, confirm to overwrite.
     """
     if os.path.exists(path):
-        prompt_yes_or_abort("File already exists. Overwrite?")
+        confirm_or_abort("File already exists. Overwrite?")
     df.to_csv(path)
+    if os.path.exists(path):
+        click.echo(f"Overwritten {path}.")
