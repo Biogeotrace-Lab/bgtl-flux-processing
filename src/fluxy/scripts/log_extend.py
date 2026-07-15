@@ -10,7 +10,7 @@ from ..utils.timeseries_checks import find_timeseries_duplicates
 from ..utils.timeseries_checks import find_timeseries_gaps
 
 from ..utils.fs import create_backup
-from ..utils.fs import recover_backup
+from ..utils.fs import confirm_to_recover_backup
 from ..utils.prompt import confirm_or_abort
 from ..utils.checks import passes_quality_check
 
@@ -34,10 +34,10 @@ def main(extension: str, master: str, recover: bool, show_rows: int):
     it has not gaps, or duplicated rows. Asks for confirmation to proceed.
     """
 
-    if recover and confirm_or_abort("Recover master file?"):
+    if recover:
 
         # Recover the backup file in the directory, if exists.
-        recover_backup(master)
+        confirm_to_recover_backup(master)
 
     pd.options.display.max_rows = show_rows
     pd.options.display.max_columns = 0
