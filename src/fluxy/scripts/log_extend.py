@@ -12,7 +12,7 @@ from ..utils.timeseries_checks import find_timeseries_gaps
 from ..utils.fs import create_backup
 from ..utils.fs import confirm_to_recover_backup
 from ..utils.prompt import confirm_or_abort
-from ..utils.checks import passes_quality_check
+from ..utils.checks import QualityControl
 
 logger = logging.getLogger(__name__)
 
@@ -39,96 +39,100 @@ def main(extension: str, master: str, recover: bool, show_rows: int):
         # Recover the backup file in the directory, if exists.
         confirm_to_recover_backup(master)
 
-    pd.options.display.max_rows = show_rows
-    pd.options.display.max_columns = 0
+    with QualityControl() as QC:
+        pd.options.display.max_rows = show_rows
+        pd.options.display.max_columns = 0
 
-    # Load the extension candidate and add Year DOY Time columns.
-    csv_dataframe = load_timeseries(extension)
+        # Load the extension candidate and add Year DOY Time columns.
+        csv_dataframe = load_timeseries(extension)
 
-    # Extension needs to be resampled to 30 min intervals
-    # and checked for duplicates.
-    duplicates = find_timeseries_duplicates(csv_dataframe)
-    passes_quality_check("Extension has no duplicates", duplicates.empty,
-                         "Candidate contains duplicate timestamps.")
+        # Extension needs to be resampled to 30 min intervals
+        # and checked for duplicates.
+        duplicates = find_timeseries_duplicates(csv_dataframe)
 
-    # Verify extension index is sorted.
-    passes_quality_check("Extension index is sorted",
-                         csv_dataframe.index.tolist() ==
-                         csv_dataframe.sort_index().index.to_list(),
-                         "Extension indices are not sorted. "
-                         "Is the file corrupted?")
+        QC.add_check("Extension has no duplicates",
+                     duplicates.empty,
+                     "Candidate contains duplicate timestamps.")
 
-    # Force resampling to 30 min intervals.
-    # This should not be the responsibility of this script.
-    _, gaps = find_timeseries_gaps(csv_dataframe)
-    passes_quality_check("Extension has no gaps",
-                         gaps.size == 0,
-                         "The extension candidate has gaps. "
-                         "It should be formatted first.")
+        # Verify extension index is sorted.
+        QC.add_check("Extension index is sorted",
+                     csv_dataframe.index.tolist() ==
+                     csv_dataframe.sort_index().index.to_list(),
+                     "Extension indices are not sorted. "
+                     "Is the file corrupted?")
 
-    # Add year doy time to the extension candidate.
-    csv_dataframe = add_year_doy_time(csv_dataframe)
+        # Force resampling to 30 min intervals.
+        # This should not be the responsibility of this script.
+        _, gaps = find_timeseries_gaps(csv_dataframe)
+        QC.add_check("Extension has no gaps",
+                     gaps.size == 0,
+                     "The extension candidate has gaps. "
+                     "It should be formatted first.")
 
-    # Load the declared master file.
-    master_dataframe = load_timeseries(master)
+        # Add year doy time to the extension candidate.
+        csv_dataframe = add_year_doy_time(csv_dataframe)
 
-    # Assert the columns are synchronized.
-    col_difference = csv_dataframe.columns.difference(master_dataframe.columns)
-    passes_quality_check("Files have matching columns",
-                         col_difference.empty,
-                         f"Columns don't match {col_difference.tolist()}")
+        # Load the declared master file.
+        master_dataframe = load_timeseries(master)
 
-    # The start timestamp of the master file.
-    ms_start = master_dataframe.index[0]
+        # Assert the columns are synchronized.
+        col_difference = csv_dataframe.columns.difference(master_dataframe.columns)
+        QC.add_check("Files have matching columns",
+                     col_difference.empty,
+                     f"Columns don't match {col_difference.tolist()}")
 
-    # The end timestamp of the master file.
-    ms_end = master_dataframe.index[-1]
+        # The start timestamp of the master file.
+        ms_start = master_dataframe.index[0]
 
-    # The csv timestamps that are not in the master file.
-    # These seem to continue being sorted.
-    csv_indices_non_master = csv_dataframe.index.difference(
-        master_dataframe.index)
+        # The end timestamp of the master file.
+        ms_end = master_dataframe.index[-1]
 
-    # Get the indices after the master file end.
-    csv_indices_future = csv_indices_non_master[
-        csv_indices_non_master > ms_end]
+        # The csv timestamps that are not in the master file.
+        # These seem to continue being sorted.
+        csv_indices_non_master = csv_dataframe.index.difference(
+            master_dataframe.index)
 
-    # There is no data to add.
-    passes_quality_check("Extension has new data",
-                         csv_indices_future.size > 0)
+        # Get the indices after the master file end.
+        csv_indices_future = csv_indices_non_master[
+            csv_indices_non_master > ms_end]
 
-    # Get the indices before the master file end.
-    csv_indices_past = csv_indices_non_master[
-        csv_indices_non_master < ms_end
-    ]
+        # There is no data to add.
+        QC.add_check("Extension has new data",
+                     csv_indices_future.size > 0,
+                     "There is no new data to write.")
 
-    passes_quality_check("Extension is newer than master",
-                         not csv_indices_past.empty and
-                         ms_start <= csv_indices_past[0],
-                         "Extension is older than master file. "
-                         "Did you choose the correct files?")
+        # Get the indices before the master file end.
+        csv_indices_past = csv_indices_non_master[
+            csv_indices_non_master < ms_end
+        ]
 
-    # The start of the future timestamps.
-    future_start = csv_indices_future[0]
+        QC.add_check("Extension is more recent than master",
+                     not csv_indices_past.empty and
+                     ms_start <= csv_indices_past[0],
+                     "Extension contains older records than master file. "
+                     "Did you choose the correct files?")
 
-    # Check csv_dataframe is a continuation of master file.
-    time_gap = future_start - ms_end
+        # The start of the future timestamps.
+        future_start = csv_indices_future[0]
 
-    passes_quality_check("Extension is continuation of master",
-                         time_gap == pd.Timedelta("30 min"),
-                         f"There is a time gap of {time_gap} between"
-                         "the master file and extension file. "
-                         "Are you missing data in between?")
+        # Check csv_dataframe is a continuation of master file.
+        time_gap = future_start - ms_end
 
-    # Ignore overlapping rows.
-    extension_dataframe = csv_dataframe.loc[csv_indices_future]
+        QC.add_check("Extension is continuation of master",
+                     time_gap == pd.Timedelta("30 min"),
+                     f"There is a time gap of {time_gap} between"
+                     "the master file and extension file. "
+                     "Are you missing data in between?")
 
-    # FINAL CHECK and actually perform the extension here.
-    # This will fail if the extension is not clean,
-    # or the master for some reason.
-    extended_master_dataframe = pd.concat([master_dataframe,
-                                           extension_dataframe],
-                                          verify_integrity=True)
+        # Ignore overlapping rows.
+        extension_dataframe = csv_dataframe.loc[csv_indices_future]
+
+        # FINAL CHECK and actually perform the extension here.
+        # This will fail if the extension is not clean,
+        # or the master for some reason.
+        extended_master_dataframe = pd.concat([master_dataframe,
+                                               extension_dataframe],
+                                               verify_integrity=True)
 
     # Report all changes in detail for user verification.
     # New indices are just csv_indices_future. This is not necessary.
