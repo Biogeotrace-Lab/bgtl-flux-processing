@@ -10,8 +10,10 @@ logger = logging.getLogger(__name__)
 
 @click.command(name="log-diff",
                short_help="Highlight the differences between two log files.")
-@click.argument("csv-like-file-1", nargs=1, required=True)
-@click.argument("csv-like-file-2", nargs=1, required=True)
+@click.argument("csv-like-file-1", nargs=1, required=True,
+                type=click.Path(exists=True))
+@click.argument("csv-like-file-2", nargs=1, required=True,
+                type=click.Path(exists=True))
 @click.option("--show-rows", type=int, required=False, default=1000,
               help="Number of rows to print in detail.")
 def main(csv_like_file_1: str, csv_like_file_2: str, show_rows: int):
@@ -38,4 +40,4 @@ def main(csv_like_file_1: str, csv_like_file_2: str, show_rows: int):
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()
