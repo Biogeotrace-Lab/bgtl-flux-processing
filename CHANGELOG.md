@@ -1,3 +1,14 @@
+## [1.1.0] - 2026-07-22
+
+### 🚀 Features
+
+- Added unique file naming convention for backup files based on absolute path and operation
+- Added functionality in utils.config for downloading listing and generating site configuration files
+- Implemented config cli module
+- Added path exists check in log-build for input csvs
+- Added path exists check for csv inputs in log-diff
+- Added path exists check for csv inputs in log-extend
+- Updated config changes and added dtype checks in `load_timeseries`
 ## [1.0.0] - 2026-07-15
 
 ### 🚀 Features
