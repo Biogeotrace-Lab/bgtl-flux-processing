@@ -3,6 +3,8 @@ from pathlib import Path
 import os
 import click
 
+import fluxy
+
 
 def get_filename(path: str | os.PathLike | Path) -> str:
     """Return the filename at the end of the complete path.
@@ -27,6 +29,11 @@ def change_directory(path: str | os.PathLike | Path,
     return Path(directory) / name
 
 
+def get_package_directory():
+    pkg_dir = Path(fluxy.__file__).resolve()
+    return pkg_dir.parents[0]
+
+
 def get_internal_app_directory():
     """Get the internal directory of the app."""
     app_name = os.environ['app-name']
@@ -35,8 +42,18 @@ def get_internal_app_directory():
     return Path(app_dir)
 
 
-def get_internal_backup_directory():
+def get_or_create_subdirectory(name: str) -> Path:
+    """Create and return an app subdirectory if not exists.
+    """
     app_dir = get_internal_app_directory()
-    backup_dir = app_dir / "backup"
-    os.makedirs(backup_dir, exist_ok=True)
-    return backup_dir
+    subdir = app_dir / name
+    os.makedirs(subdir, exist_ok=True)
+    return subdir
+
+
+def get_internal_backup_directory():
+    return get_or_create_subdirectory("backup")
+
+
+def get_internal_config_directory():
+    return get_or_create_subdirectory("conf.d")
