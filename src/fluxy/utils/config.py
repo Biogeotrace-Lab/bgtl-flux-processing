@@ -74,9 +74,14 @@ def _read_config(path: str | Path) -> SiteConfig:
         return yaml.safe_load(config_stream)
 
 
-def _get_pkg_directory():
-    pkg_dir = Path(fluxy.__file__).resolve()
-    return pkg_dir.parents[0]
+def _get_config_name(name: str):
+    """Return an internal configuration file name based on convention.
+    
+    #### Convention:
+    The provided name is transformed to title and the file extension `.conf`
+    is added.
+    """
+    return name.title() + ".conf"
 
 
 def write_config(data: SiteConfig, path: str) -> None:
