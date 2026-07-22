@@ -1,21 +1,43 @@
 import yaml
 import os
-import fluxy
 import datetime
 import shutil
 import sys
+import click
 
 from pathlib import Path
+from simpleeval import SimpleEval
+
+from dataclasses import dataclass
+from dataclasses import fields
+
 from typing_extensions import TypedDict
-from typing import Any
+from typing import NotRequired
+
+from .paths import get_package_directory
+from .paths import get_internal_config_directory
+from .fs import confirm_to_copy
+from .paths import get_filename
+from .prompt import confirm_or_abort
+
+import pandas as pd
+import urllib.request
+import json
+
+
+def get_math_evaluator(df: pd.DataFrame):
+    """This function must be registering the DataFrame columns as variables
+    in the evaluator engine before returning the evaluator.
+    """
+    return SimpleEval()
 
 
 class ReadCsvOpts(TypedDict):
-    header: int | None
-    skiprows: list | None
-    parse_dates: list | None
-    index_col: str | None
-    na_values: list | None
+    header: NotRequired[int | None]
+    skiprows: NotRequired[list | None]
+    parse_dates: NotRequired[list | None]
+    index_col: NotRequired[str | None]
+    na_values: NotRequired[list | None]
 
 
 class ConversionConsts(TypedDict):
@@ -35,16 +57,18 @@ class DefaultOpts(Opts):
 
 
 class SiteConfig(Opts):
-    file: str
     read_csv_opts: list[ReadCsvOpts]
-    volt_conversions: dict[datetime.datetime,
-                           dict[str, ConversionConsts]]
+    conversions: dict[datetime.datetime,
+                      dict[str, ConversionConsts]]
 
 
-type ConfigDict = dict[str, SiteConfig]
+@dataclass(slots=True)
+class Configuration:
+    read_csv_opts: ReadCsvOpts
+    site_config: SiteConfig
 
 
-def _read_config(path: str) -> ConfigDict:
+def _read_config(path: str | Path) -> SiteConfig:
     """Read yaml configuration file."""
     with open(path) as config_stream:
         return yaml.safe_load(config_stream)
@@ -55,13 +79,13 @@ def _get_pkg_directory():
     return pkg_dir.parents[0]
 
 
-def write_config(data: ConfigDict, path: str) -> None:
+def write_config(data: SiteConfig, path: str) -> None:
     """Write yaml configuration file."""
     with open(path, "w") as config_stream_out:
         return yaml.safe_dump(data, config_stream_out)
 
 
-def get_default_config() -> ConfigDict:
+def get_default_config() -> DefaultOpts:
     """Get the default configuration file of the package.
     """
     # Get the directory of the package.
