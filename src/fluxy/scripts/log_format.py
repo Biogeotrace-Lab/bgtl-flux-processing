@@ -16,24 +16,28 @@ from ..io.csv import dataframe_confirm_if_overwrite
 from ..utils.timeseries_checks import find_timeseries_gaps
 from ..utils.fs import recover_backup
 
+from ._options import CommandWithMutuallyExclusiveOptions
+
 logger = logging.getLogger(__name__)
 
 
-@click.command(name="log-format", short_help="Format log files.")
-
-@click.argument("csv-log-file", nargs=1, required=True)
-
+@click.command(name="log-format",
+               cls=CommandWithMutuallyExclusiveOptions,
+               mutex=["--inplace", "--output"],
+               short_help="Format log files.")
+@click.argument("csv-log-file", nargs=1, required=True,
+                type=click.Path(exists=True))
 @click.option("--add-missing-rows", is_flag=True,
               help="Fill in missing timestamps with empty rows (resample).")
 @click.option("--add-timestamp", is_flag=True,
               help="Recover TIMESTAMP from Year, DOY, Time columns.")
 @click.option("--add-records", is_flag=True,
-              help="Add a RECORD column.")
+              help="Add a RECORD column that enumerates rows.")
 @click.option("--add-doy", is_flag=True,
               help="Create Year, DOY, Time columns from TIMESTAMP "
               "(End of day @2400H).")
-@click.option("--inplace", is_flag=True, help="Modify file inplace.")
-
+@click.option("--inplace", is_flag=True,
+              help="Modify file inplace.")
 @click.option("--output", type=Path, required=False,
               help="Write formatted file to destination.")
 @click.option("--recover", is_flag=True, help="Undo last changes to log file.")
