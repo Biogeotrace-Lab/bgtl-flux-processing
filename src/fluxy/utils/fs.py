@@ -3,6 +3,7 @@ import os
 import sys
 
 from pathlib import Path
+from typing import NoReturn
 from ..utils.paths import get_filename
 from ..utils.paths import get_parent_directory
 from ..utils.paths import get_internal_backup_directory
@@ -10,6 +11,7 @@ from ..utils.prompt import confirm_or_abort
 
 import click
 import glob
+import re
 
 
 def _get_backup_path(name: str):
@@ -31,11 +33,42 @@ def copy_file(src: str | os.PathLike,
     shutil.copy(src, dst)
 
 
+def confirm_to_copy(src: str | os.PathLike,
+                    dst: str | os.PathLike) -> None:
+    """Copy file, but ask for confirmation for overwriting.
+    """
+    msg = ''
+    exists = os.path.exists(dst)
+    if exists:
+        
+        confirm_or_abort("File exists. Overwrite?")
+        msg = 'Overwritten.'
+
+    copy_file(src, dst)
+    click.echo(msg, nl=exists)
+
+
+
 def move_file(src: str | os.PathLike,
               dst: str | os.PathLike) -> None:
     """Copy a file from source to destination.
     """
     shutil.move(src, dst)
+
+
+def confirm_to_move(src: str | os.PathLike,
+                    dst: str | os.PathLike) -> None:
+    """Copy file, but ask for confirmation for overwriting.
+    """
+    msg = ''
+    exists = os.path.exists(dst)
+    if exists:
+        
+        confirm_or_abort("File exists. Overwrite?")
+        msg = 'Overwritten.'
+
+    move_file(src, dst)
+    click.echo(msg, nl=exists)
 
 
 def create_backup(src: str | os.PathLike) -> None:
