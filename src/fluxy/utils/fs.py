@@ -14,16 +14,27 @@ import glob
 import re
 
 
-def _get_backup_path(name: str):
-    """This should create new names depending on the operation or number
-    of files.
+def _get_backup_file_name(src: str | Path, version: int | None = None):
+    """Create a unique name based on source path."""
+    basename = re.sub(r"[/\\]", "-", str(src))
+    v = version if version is None else ''
+    return ".{basename}.bak~{command}~{v}".format(basename=basename,
+                                                  command=
+                                                  os.environ['fluxy-command'],
+                                                  v=v)
+
+
+def _get_backup_path(src: str | Path):
+    """Return a backup file destination path based on the processed file
+    and chosen operation.
     """
+    src = Path(src).resolve()
     backup_dir = get_internal_backup_directory()
-    backups = glob.glob(str(backup_dir / ("." + name + "*")))
+    # Explicitly versionless so we can glob.
+    filename = _get_backup_file_name(src, version=None)
+    backups = glob.glob(str(backup_dir / (filename + "*")))
     version = len(backups)
-    return backup_dir / ".{name}.bak~{command}".format(name=name,
-                                                       command=os.environ
-                                                       ['fluxy-command'])
+    return backup_dir / _get_backup_file_name(src, version)
 
 
 def copy_file(src: str | os.PathLike,
@@ -75,25 +86,22 @@ def create_backup(src: str | os.PathLike) -> None:
     """Create a hidden backup file in the same directory.
     """
     src = Path(src)
-    name = get_filename(src)
-    directory = get_internal_backup_directory()
-    destination = directory / _get_backup_path(name)
+    destination = _get_backup_path(src)
     copy_file(src, destination)
     click.echo(f"Created backup file.")
 
 
-def recover_backup(src: str | os.PathLike) -> None:
+def recover_backup(src: str | os.PathLike) -> NoReturn:
     """Recover a hidden backup file from the same directory.
     """
     src = Path(src)
-    name = get_filename(src)
-    path = _get_backup_path(name)
+    path = _get_backup_path(src)
 
     if path.exists():
         move_file(path, src)
         click.echo("Recovered file from backup.")
     else:
-        click.secho(f"There is no backup file for {name}.")
+        click.secho(f"There is no backup file for {src}.")
         raise click.Abort()
 
     sys.exit(0)
