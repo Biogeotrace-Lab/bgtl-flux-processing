@@ -6,7 +6,7 @@ from ..utils.config import get_default_config
 from ..utils.prompt import confirm_or_abort
 from ..utils.fs import create_backup
 
-from typing import cast
+from typing import Unpack
 
 import os
 import click
@@ -14,25 +14,34 @@ import click
 from pathlib import Path
 
 
-_default_config = get_default_config()['default']
+_default_config = get_default_config()
 
 
 def load_timeseries(csv_path: str | Path | os.PathLike,
                     config: DefaultOpts | SiteConfig = _default_config,
-                    **kwargs) -> pd.DataFrame:
+                    **kwargs: Unpack[ReadCsvOpts]) -> pd.DataFrame:
     """Load CSV into a DataFrame with preconfigured options in `config.yaml`
     """
     read_csv_opts = config['read_csv_opts']
-    error = "Undefined."
+    errors = []
     for opts in read_csv_opts:
-        opts = cast(dict, opts)
+        # Overload with kwargs as highest precedence.
         opts.update(kwargs)
         try:
-            return pd.read_csv(csv_path, **opts)
-        except Exception as e:
-            error = e
+            timeseries = pd.read_csv(csv_path, **opts)
 
-    raise RuntimeError(f"Couldn't load timeseries {csv_path} with error\n {error}")
+            if timeseries.dtypes.isin(["object", "str"]).any():
+                raise ArithmeticError(
+                    "Non numerical data in timeseries. " \
+                    "Check your na_values declaration.")
+
+            return timeseries
+        except Exception as e:
+            errors.append(e.__repr__())
+
+    click.echo(f"Couldn't load timeseries {csv_path} with errors:")
+    click.echo(f"{"\n\n".join(errors)}")
+    raise click.Abort()
 
 
 def dataframe_confirm_inplace_modification_with_backup(df: pd.DataFrame,
