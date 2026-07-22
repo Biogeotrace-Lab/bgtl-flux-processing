@@ -20,8 +20,10 @@ logger = logging.getLogger(__name__)
 @click.command(name="log-extend",
                short_help="Extend a log masterfile with a csv candidate.")
 @click.option("-e", "--extension", nargs=1, required=True,
+              type=click.Path(exists=True),
               help="The extension log file.")
 @click.option("-m", "--master", nargs=1, required=True,
+              type=click.Path(exists=True),
               help="The master file to extend.")
 @click.option("--recover", type=bool, required=False, is_flag=True,
               help="Undo the last changes to the master file.")
