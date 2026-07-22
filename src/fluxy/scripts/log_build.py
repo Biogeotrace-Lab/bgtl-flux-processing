@@ -2,7 +2,6 @@ import pandas as pd
 import sys
 import logging
 
-from ..utils.config import get_config
 from ..io.csv import load_timeseries
 from ..io.csv import dataframe_confirm_if_overwrite
 from ..utils.conversions import add_year_doy_time
@@ -23,7 +22,8 @@ logging.basicConfig(level=logging.INFO)
 @click.command(name="log-build",
                short_help="Build a complete timeseries "
                "from multiple csv sources.")
-@click.argument("csv-like-files", nargs=-1, required=True)
+@click.argument("csv-like-files", nargs=-1, required=True,
+                type=click.Path(exists=True))
 @click.option("--output", default="Met30min.csv",
               help="The output file for the built meteorological dataset. "
               "Defaults to 'output.csv'")
