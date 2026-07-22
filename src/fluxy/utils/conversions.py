@@ -17,7 +17,7 @@ def project_analog_values_to_meteo_units(data: pd.DataFrame, config: SiteConfig)
     # TODO parameters
     """
     data_copy = data.copy()
-    conversions = config["volt_conversions"]
+    conversions = config["conversions"]
     periods = sorted(conversions.keys())
 
     for period in periods:
@@ -74,7 +74,7 @@ def get_projection_arrays(data: pd.DataFrame, config: SiteConfig):
     scalars[:] = 1
     offsets[:] = 1
 
-    for period, constants in config["volt_conversions"].items():
+    for period, constants in config["conversions"].items():
         # List of length must be number of columns
         scalars[period:] = []
         offsets[period:] = []
