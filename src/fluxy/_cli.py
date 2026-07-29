@@ -60,10 +60,10 @@ def main(ctx: click.Context):
         os.environ['fluxy-command'] = ctx.invoked_subcommand
 
 
-for path in SCRIPTS.glob("[!_]*.py"):
+for path in sorted(SCRIPTS.glob("[!_]*.py")):
     module = f"fluxy.scripts.{path.stem}"
     module = importlib.import_module(module)
-    main.add_command(module.main)
+    main.add_command(module.main, module.main.name)
 
 
 if __name__ == "__main__":
