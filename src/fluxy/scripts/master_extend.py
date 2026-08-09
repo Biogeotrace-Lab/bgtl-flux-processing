@@ -17,7 +17,7 @@ from ..utils.checks import QualityControl
 logger = logging.getLogger(__name__)
 
 
-@click.command(name="log-extend",
+@click.command(name="extend-master",
                short_help="Extend a log masterfile with a csv candidate.")
 @click.option("-e", "--extension", nargs=1, required=True,
               type=click.Path(exists=True),
