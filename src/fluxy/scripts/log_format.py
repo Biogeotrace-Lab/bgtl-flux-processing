@@ -21,7 +21,7 @@ from ._options import CommandWithMutuallyExclusiveOptions
 logger = logging.getLogger(__name__)
 
 
-@click.command(name="log-format",
+@click.command(name="format",
                cls=CommandWithMutuallyExclusiveOptions,
                mutex=["--inplace", "--output"],
                short_help="Format log files.")
@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
               "(End of day @2400H).")
 @click.option("--inplace", is_flag=True,
               help="Modify file inplace.")
-@click.option("--output", type=Path, required=False,
+@click.option("--output", type=click.Path(dir_okay=False), required=False,
               help="Write formatted file to destination.")
 @click.option("--recover", is_flag=True, help="Undo last changes to log file.")
 def main(csv_log_file: Path, add_timestamp: bool, add_missing_rows: bool,
