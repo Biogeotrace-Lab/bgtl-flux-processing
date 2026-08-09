@@ -1,20 +1,30 @@
 # Default internal configurations.
 # Each subsequent configuration completely
 # replaces the previous ones.
+site: 'default'
 read_csv_opts:
   # Case 1: Processed timeseries file.
   - header: 0
     parse_dates: ["TIMESTAMP"]
     index_col: "TIMESTAMP"
-    na_values: [-99999, 99999, -9999, 9999, -6999, -7777, "NA", "NAN"]
+    na_values: ["-99999", "99999", "-9999", "9999", "-6999", "-7777", "NA", "NAN"]
 
   # Case 2: Raw Campbell datalogger log file output.
   - header: 1 # Which csv row contains the headers
     skiprows: [2, 3] # Irrelevant rows (removes units and operations)
     parse_dates: ["TIMESTAMP"]
     index_col: "TIMESTAMP"
-    na_values: [-99999, 99999, -9999, 9999, -6999, -7777, "NA", "NAN"]
+    na_values: ["-99999", "99999", "-9999", "9999", "-6999", "-7777", "NA", "NAN"]
 
   # Case 3: Processed file with removed TIMESTAMP column.
   - header: 0
-    na_values: [-99999, 99999, -9999, 9999, -6999, -7777, "NA", "NAN"]
+    na_values: ["-99999", "99999", "-9999", "9999", "-6999", "-7777", "NA", "NAN"]
+
+valid_ranges:
+  wm: [-100, 1500]
+  wq: [-5, 20]
+  wc: [-40, 25]
+  wt: [-0.1, .5]
+  RSSI: [10, 20]
+  m: [1.74 * 41 / 1e+3, null]
+  SS: [50, 0.5]
