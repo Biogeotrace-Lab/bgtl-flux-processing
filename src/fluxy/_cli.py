@@ -90,7 +90,7 @@ def main(ctx: click.Context):
 for path in sorted(SCRIPTS.glob("[!_]*.py")):
     module = f"fluxy.scripts.{path.stem}"
     module = importlib.import_module(module)
-    main.add_command(module.main, module.main.name, "Commands")
+    main.add_command(module.main, module.main.name, "General commands")
 
 
 if __name__ == "__main__":
