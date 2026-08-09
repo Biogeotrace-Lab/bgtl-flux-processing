@@ -7,6 +7,9 @@ class CommandWithMutuallyExclusiveOptions(click.Command):
         super().__init__(*args, **kwargs)
 
     def parse_args(self, ctx: click.Context, args: list[str]) -> list[str]:
+        if ctx.resilient_parsing:
+            return super().parse_args(ctx, args)
+
         intersection = self.mutex.intersection(set(args))
         if len(intersection) > 1:
             ctx.fail(f"Options {intersection} cannot be used together.")
