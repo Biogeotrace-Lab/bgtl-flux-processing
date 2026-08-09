@@ -14,7 +14,8 @@ from ..io.csv import dataframe_confirm_inplace_modification_with_backup
 
 @click.command(name="check-tz",
                short_help="Check the log file for potential timezone shifts.")
-@click.argument("csv-log-file", nargs=1, required=True)
+@click.argument("csv-log-file", nargs=1, required=True,
+                type=click.Path(exists=True, dir_okay=False))
 @click.option("--fix", is_flag=True, help="Attempt to fix the error.")
 @click.option("--recover", is_flag=True, help="Undo last changes to log file.")
 def main(csv_log_file: str, fix: bool, recover: bool):
