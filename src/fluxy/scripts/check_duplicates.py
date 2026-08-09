@@ -8,7 +8,8 @@ from ..utils.checks import QualityControl
 
 @click.command(name="check-duplicates",
                short_help="Check the log file for duplicate rows.")
-@click.argument("csv-log-file", nargs=1, required=True)
+@click.argument("csv-log-file", nargs=1, required=True,
+                type=click.Path(exists=True, dir_okay=False))
 def main(csv_log_file: str):
     r"""Check log file for duplicate rows.
     
