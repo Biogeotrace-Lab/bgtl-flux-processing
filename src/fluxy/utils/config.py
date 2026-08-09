@@ -12,7 +12,6 @@ from dataclasses import fields
 
 from typing_extensions import TypedDict
 from typing import Literal
-from typing import Iterable
 
 from .paths import get_package_directory
 from .paths import get_internal_config_directory
@@ -29,70 +28,101 @@ import msgspec
 _CONFIG_EXT = ".yaml"
 
 
-class ReadCsvOpts(TypedDict):
-    header: NotRequired[int | None]
-    skiprows: NotRequired[list | None]
-    parse_dates: NotRequired[list | None]
-    index_col: NotRequired[str | None]
-    na_values: NotRequired[list | None]
+class ReadCsvOpts(TypedDict, total=False):
+    header: int | None
+    skiprows: list | None
+    parse_dates: list | None
+    index_col: str | None
+    na_values: list | None
+    sep: str | None
+    engine: Literal["c"] | Literal["python"] | Literal["pyarrow"]
+    dtype_backend: Literal['numpy_nullable'] | Literal['pyarrow']
+    usecols: list[str]
 
-
-class ConversionConsts(TypedDict):
+# @dataclass
+class ConversionConfig(TypedDict, total=False):
     scalar: float | str
     offset: float | str
     lower: float | str
     upper: float | str
-    var: str
+
+type VariableName = str
+type Evaluatable = str | int | float | None
+type ConversionVariables = dict[VariableName, ConversionConfig]
+
+class FluxVariableInfo(TypedDict, total=False):
+    name: str
+    units: str
+    range: tuple[Evaluatable, Evaluatable]
+
+type L0ProcessingLevelConfig = dict[VariableName, FluxVariableInfo | None]
+type L1ProcessingLevelConfig = dict[VariableName, FluxVariableInfo]
+type ValidRanges = dict[VariableName, tuple[Evaluatable, Evaluatable]]
+type Conversions = dict[datetime.datetime, ConversionVariables]
+type OfflinePeriod = tuple[datetime.datetime, datetime.datetime]
+
+class SiteConfiguration(msgspec.Struct):
+    site: str
+    read_csv_opts: list[ReadCsvOpts] = []
+    conversions: Conversions = {}
+    offline: list[OfflinePeriod] = []
+    L0: L0ProcessingLevelConfig = {}
+    L1: L1ProcessingLevelConfig = {}
 
 
-class Opts(TypedDict):
-    read_csv_opts: list[ReadCsvOpts]
+class DefaultConfiguration(msgspec.Struct):
+    read_csv_opts: list[ReadCsvOpts] = []
 
 
-class DefaultOpts(Opts):
-    read_csv_opts: list[ReadCsvOpts]
+def get_ranges(data: L1ProcessingLevelConfig) -> pd.DataFrame:
+    """Collect 'range' values per variable from the immediate sublevel
+    of a dictionary.
+    
+    :returns: A DataFrame with ranges per variable column.
+    :rtype: pandas.DataFrame
+    """
+    return pd.DataFrame({k: v['range'] for k, v in data.items()
+                         if 'range' in v}, index=['min', 'max'],
+                         dtype=object)
 
 
-class SiteConfig(Opts):
-    read_csv_opts: list[ReadCsvOpts]
-    conversions: dict[datetime.datetime,
-                      dict[str, ConversionConsts]]
-
-
-@dataclass(slots=True)
-class Configuration:
-    read_csv_opts: ReadCsvOpts
-    site_config: SiteConfig
-
-
-def _read_config(path: str | Path) -> SiteConfig:
+def _read_config(path: str | Path) -> SiteConfiguration:
     """Read yaml configuration file."""
-    with open(path) as config_stream:
-        return yaml.safe_load(config_stream)
+    with open(path, "rb") as config_stream:
+        return msgspec.yaml.decode(config_stream.read(), type=SiteConfiguration)
+
+
+def _read_default_config(path: str | Path) -> DefaultConfiguration:
+    """Read yaml configuration file."""
+    with open(path, "rb") as config_stream:
+        return msgspec.yaml.decode(config_stream.read(),
+                                   type=DefaultConfiguration)
 
 
 def _get_config_name(name: str):
     """Return an internal configuration file name based on convention.
     
     #### Convention:
-    The provided name is transformed to title and the file extension `.conf`
-    is added.
+    The provided name is transformed to title and the file extension
+    `_CONFIG_EXT` is added.
     """
-    return name.title() + ".conf"
+    return name.title() + _CONFIG_EXT
 
 
-def write_config(data: SiteConfig, path: str) -> None:
+def write_config(data: SiteConfiguration, path: str) -> None:
     """Write yaml configuration file."""
-    with open(path, "w") as config_stream_out:
+    with open(path, "wb") as config_stream_out:
+        _bytes = msgspec.yaml.encode(data)
+        config_stream_out.write(_bytes)
         return yaml.safe_dump(data, config_stream_out)
 
 
-def get_default_config() -> DefaultOpts:
+def get_default_config() -> DefaultConfiguration:
     """Get the default configuration file of the package.
     """
     # Get the directory of the package.
     pkg_directory = get_package_directory()
-    return _read_config(os.path.join(pkg_directory, "config.yaml"))
+    return _read_default_config(os.path.join(pkg_directory, "config.yaml"))
 
 
 def print_config_file(name: str) -> None:
@@ -204,7 +234,7 @@ def create_configuration(name: str):
     the internal configuration template.
     """
     name = name.title()
-    config_file = name + ".conf"
+    config_file = name + _CONFIG_EXT
     confirm_or_abort(f"Create configuration file {config_file}?")
     pkg_dir = get_package_directory()
     wd = Path(os.getcwd())
@@ -216,7 +246,7 @@ def create_configuration(name: str):
                f"'fluxy config --save-config {config_file}'")
 
 
-def load_configuration(name: str) -> SiteConfig:
+def load_configuration(name: str) -> SiteConfiguration:
     """Load the requested configuration in memory.
     """
     config_dir = get_internal_config_directory()
@@ -227,9 +257,7 @@ def load_configuration(name: str) -> SiteConfig:
         click.echo("Configuration not found.")
         raise click.Abort()
 
-    config = _read_config(path)
-
-    return config
+    return _read_config(path)
 
 
 def download_configuration(name: str):
