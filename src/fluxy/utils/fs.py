@@ -110,3 +110,12 @@ def recover_backup(src: str | os.PathLike) -> NoReturn:
 def confirm_to_recover_backup(src: str | os.PathLike) -> None:
     confirm_or_abort(f"Recover backup for {src}?")
     recover_backup(src)
+
+
+def get_daily_flux_filename(site: str, desc: str, year: int,
+                            doy: int, ext: str) -> str:
+    return "{site}_{desc}_{year:04d}_{doy:03d}.{ext}".format(site=site,
+                                                             desc=desc,
+                                                             year=year,
+                                                             doy=doy,
+                                                             ext=ext)
