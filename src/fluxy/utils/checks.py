@@ -47,24 +47,39 @@ def passes_quality_check_or_aborts(msg: str, passing_condition: bool,
         raise click.Abort()
 
 
-class QualityControl:
+class _ReportTable:
+    CONSOLE = Console()
+    def __init__(self, title: str, columns: list[str]) -> None:
+        self.table = Table(title=title, title_style="bold")
+        self.table.add_column("#", justify="center")
+        for column in columns:
+            self.table.add_column(column)
+        self._id_generator = (str(i) for i in range(1, 10000))
+
+    def generate_new_id(self):
+        return next(self._id_generator)
+
+    def report(self):
+        self.CONSOLE.print(self.table)
+
+    def add_row(self, *row_items, style=None):
+        self.table.add_row(self.generate_new_id(),
+                           *row_items,
+                           style=style)
+
+
+class QualityControl(_ReportTable):
     """QualityControl class
 
     It collects quality control checks and reports back with the corresponding
     error code. Can be used as a context manager.
     """
     STATUS = {True: f"Pass {tick}", False: f"Fail {ballot}"}
-    CONSOLE = Console()
 
     def __init__(self) -> None:
+        super().__init__("Quality Control Report",
+                         ["Checks", "Status", "Comments"])
         self.error_code = 0
-        self._checks_count = 0
-        self.table = Table(title="Quality Control Report", title_style="bold")
-        self.table.add_column("Checks", justify="right")
-        self.table.add_column("Description")
-        self.table.add_column("Status")
-        self.table.add_column("Comments")
-        self._id_generator = (str(i) for i in range(1, 10000))
 
     def _format_status(self, passes: bool):
         return self.STATUS[passes]
@@ -84,17 +99,17 @@ class QualityControl:
         # Flip errors code if failure.
         self.error_code |= not pass_condition
 
-    def report(self) -> int:
+    def report_with_error_code(self) -> int:
         """Construct the report to stdout and return `error_code`.
         
         :returns error_code: 0 if control passes; 1 if control fails.
         :rtype: int
         """
-        self.CONSOLE.print(self.table)
+        self.report()
         return self.error_code
 
     def report_and_exit(self):
-        self.report()
+        self.report_with_error_code()
         sys.exit(self.error_code)
 
     def __enter__(self):
@@ -113,3 +128,15 @@ class QualityControl:
                 self.table.title += " (Partial)"
 
         self.report_and_exit()
+
+
+class ComparisonReport(_ReportTable):
+    """A reporting class for creating comparison tables.
+    """
+    def __init__(self, candidates: list[str], columns: list[str]) -> None:
+        super().__init__(f"Comparison Table: '{candidates[0]}' vs "
+                         f" '{candidates[1]}'",
+                         columns)
+
+    def add_comparison(self, *row_items, style=None):
+        self.add_row(*row_items, style=style)
