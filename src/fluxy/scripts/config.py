@@ -6,7 +6,7 @@ from ..utils.config import list_configurations
 from ..utils.config import create_configuration
 from ..utils.config import save_configuration
 from ..utils.config import delete_configuration
-from ..utils.config import get_configuration
+from ..utils.config import get_configuration_path
 from ..utils.config import download_configuration
 from ..utils.config import list_configurations_registry
 
@@ -65,7 +65,7 @@ def main(create_config, save_config, edit_config, list_config,
         save_configuration(save_config)
 
     if edit_config is not None:
-        click.edit(filename=str(get_configuration(edit_config)))
+        click.edit(filename=str(get_configuration_path(edit_config)))
 
     if delete_config is not None:
         delete_configuration(delete_config)

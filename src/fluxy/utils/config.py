@@ -6,13 +6,13 @@ import sys
 import click
 
 from pathlib import Path
-from simpleeval import SimpleEval
 
 from dataclasses import dataclass
 from dataclasses import fields
 
 from typing_extensions import TypedDict
-from typing import NotRequired
+from typing import Literal
+from typing import Iterable
 
 from .paths import get_package_directory
 from .paths import get_internal_config_directory
@@ -23,13 +23,10 @@ from .prompt import confirm_or_abort
 import pandas as pd
 import urllib.request
 import json
+import msgspec
 
 
-def get_math_evaluator(df: pd.DataFrame):
-    """This function must be registering the DataFrame columns as variables
-    in the evaluator engine before returning the evaluator.
-    """
-    return SimpleEval()
+_CONFIG_EXT = ".yaml"
 
 
 class ReadCsvOpts(TypedDict):
@@ -191,7 +188,7 @@ def delete_configuration(name: str):
     click.echo(f"Configuration {name} deleted successfully.")
 
 
-def get_configuration(name: str) -> Path:
+def get_configuration_path(name: str) -> Path:
     config_dir = get_internal_config_directory()
     config_name = _get_config_name(name)
     path = config_dir / config_name
