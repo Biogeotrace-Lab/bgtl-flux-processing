@@ -1,74 +1,170 @@
+# Site code.
 site: AL
-read_csv_opts:
-    - header: 0
-      parse_dates: ["TIMESTAMP"]
-      index_col: "TIMESTAMP"
-      na_values: ["-99999", "99999", "-9999", "9999", "-6999", "-7777", "NA", "NAN"]
-    - header: 1
-      skiprows: [2, 3]
-      parse_dates: ["TIMESTAMP"]
-      index_col: "TIMESTAMP"
-      na_values: ["-99999", "99999", "-9999", "9999", "-6999", "-7777", "NA", "NAN"]
-    - header: 0
-      na_values: ["-99999", "99999", "-9999", "9999", "-6999", "-7777", "NA", "NAN"]
-      parse_dates: null
-      index_col: null
-conversions:
-    2020-01-01 00:00:00:
-      TA_Avg:
-        scalar: 1
-        offset: 0
-        lower: -10
-        upper: 50
-      RH_Avg:
-        scalar: 1
-        lower: 1
-        upper: 100
-      PA:
-        scalar: 1
-        lower: 85
-        upper: 105
-      PAR_1_Avg:
-        scalar: 151.74506828528072
-        offset: 0
-        lower: -5
-        upper: 3000
-      PAR_2_Avg:
-        scalar: 150.60240963855424
-        offset: 0
-        lower: -5
-        upper: 3000
-      SW_IN_Avg:
-        scalar: 75.35795026375283
-        offset: 0
-        lower: -150
-        upper: 1500
-      SW_OUT_Avg:
-        scalar: 94.33962264150944
-        offset: 0
-        lower: -150
-        upper: 3000
-      LW_IN_Avg:
-        scalar: 105.70824524312896
-        offset: 5.67 * 10**-8 * (CNR4TC_Avg + 273.15) ** 4
-        lower: -150
-        upper: 1500
-        var: CNR4TC_Avg
-      LW_OUT_Avg:
-        scalar: 108.10810810810811
-        offset: 5.67 * 10**-8 * (CNR4TC_Avg + 273.15) ** 4
-        lower: -200
-        upper: 200
-        var: CNR4TC_Avg
-      SW_IN_NR01_Avg:
-        scalar: 69.44444444444444
-      SW_OUT_NR01_Avg:
-        scalar: 60.24096385542168
-      LW_IN_NR01_Avg:
-        scalar: 88.49557522123894
-      LW_OUT_NR01_Avg:
-        scalar: 86.20689655172414
 
-# Known periods when the site was inaccessible.
+# Data loading section.
+read_csv_opts:
+  - header: 0
+    parse_dates: ["TIMESTAMP"]
+    index_col: "TIMESTAMP"
+    na_values: ["-99999", "99999", "-9999", "9999", "-6999", "-7777", "NA", "NAN"]
+  - header: 1
+    skiprows: [2, 3]
+    parse_dates: ["TIMESTAMP"]
+    index_col: "TIMESTAMP"
+    na_values: ["-99999", "99999", "-9999", "9999", "-6999", "-7777", "NA", "NAN"]
+  - header: 0
+    na_values: ["-99999", "99999", "-9999", "9999", "-6999", "-7777", "NA", "NAN"]
+    parse_dates: null
+    index_col: null
+
+# Conversion section.
+conversions:
+  2020-01-01 00:00:00:
+    TA_Avg:
+      scalar: 1
+      offset: 0
+      lower: -10
+      upper: 50
+    RH_Avg:
+      scalar: 1
+      lower: 1
+      upper: 100
+    PA:
+      scalar: 1
+      lower: 85
+      upper: 105
+    PAR_1_Avg:
+      scalar: 151.74506828528072
+      offset: 0
+      lower: -5
+      upper: 3000
+    PAR_2_Avg:
+      scalar: 150.60240963855424
+      offset: 0
+      lower: -5
+      upper: 3000
+    SW_IN_Avg:
+      scalar: 75.35795026375283
+      offset: 0
+      lower: -150
+      upper: 1500
+    SW_OUT_Avg:
+      scalar: 94.33962264150944
+      offset: 0
+      lower: -150
+      upper: 3000
+    LW_IN_Avg:
+      scalar: 105.70824524312896
+      offset: 5.67 * 10**-8 * (CNR4TC_Avg + 273.15) ** 4
+      lower: -150
+      upper: 1500
+      var: CNR4TC_Avg
+    LW_OUT_Avg:
+      scalar: 108.10810810810811
+      offset: 5.67 * 10**-8 * (CNR4TC_Avg + 273.15) ** 4
+      lower: -200
+      upper: 200
+      var: CNR4TC_Avg
+    SW_IN_NR01_Avg:
+      scalar: 69.44444444444444
+    SW_OUT_NR01_Avg:
+      scalar: 60.24096385542168
+    LW_IN_NR01_Avg:
+      scalar: 88.49557522123894
+    LW_OUT_NR01_Avg:
+      scalar: 86.20689655172414
+
+# Known periods of tower downtime.
 offline_periods:
-    - []
+  - []
+
+L0: # L0 processing: data collection and column mapping.
+  Date:
+  Time:
+  Diagnostic Value:
+    name: Diag75
+    units: ''
+  CO2 (mmol/m^3):
+    name: C
+    units: mmol/m^3
+  H2O (mmol/m^3):
+    name: Q
+    units: mmol/m^3
+  Temperature (C):
+    name: T_li75
+    units: C
+  Pressure (kPa):
+    name: P_li75
+    units: Kpa
+  Cooler Voltage (V):
+    name: Cooler
+    units: V
+  Dew Point (C):
+    name: Tdew
+    units: C
+  CO2 Signal Strength:
+    name: SS
+    units: "%"
+  U (m/s):
+    name: U
+    units: m/s
+  V (m/s):
+    name: V
+    units: m/s
+  W (m/s):
+    name: W
+    units: m/s
+  T (C):
+    name: Ts
+    units: C
+  CH4 Temperature:
+    name: T_li77
+    units: C
+  CH4 Pressure:
+    name: P_li77
+    units: Kpa
+  CH4 Signal Strength:
+    name: RSSI
+    units: "%"
+  CH4 Diagnostic Value:
+    name: Diag77
+    units: ''
+  CH4 Drop Rate (%):
+    name: Drop
+    units: '%'
+
+L1: # L1 processing: filtering and downsampling
+  Diag75:
+    range: [0, 255]
+  C:
+    range: [0, 50]
+  Q:
+    range: [0, 2000]
+  T_li75:
+    range: [-10, 70]
+  P_li75:
+    range: [90,  120]
+  Cooler:
+    range: [0,   5]
+  Tdew:
+    range: [-40, 70] 
+  SS:
+    range: [0,   108]
+  U:
+    range: [-50, 50] 
+  V:
+    range: [-50, 50] 
+  W:
+    range: [-20, 20] 
+  Ts:
+    range: [-5,  50] 
+  T_li77:
+    range: [-10, 70] 
+  P_li77:
+    range: [90,  120]
+  RSSI:
+    range: [0,   100]
+  Diag77:
+    range: [null, null]
+  Drop:
+    range: [0, 100]
