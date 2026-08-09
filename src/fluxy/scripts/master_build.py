@@ -16,72 +16,69 @@ import click
 
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
 
 
-@click.command(name="log-build",
-               short_help="Build a complete timeseries "
+@click.command(name="assemble-master",
+               short_help="Build a complete timeseries master file "
                "from multiple csv sources.")
 @click.argument("csv-like-files", nargs=-1, required=True,
                 type=click.Path(exists=True))
 @click.option("--output", default="Met30min.csv",
               help="The output file for the built meteorological dataset. "
               "Defaults to 'output.csv'")
-def main(csv_like_files: list[str], output):
-    """Build a complete timeseries from multiple csv-like sources.
+@click.pass_context
+def main(ctx: click.Context, csv_like_files: list[str], output):
+    """Build a complete timeseries master file from multiple csv sources.
 
     This command reliably builds a finalized timeseries
-    csv file from multiple source files of raw and uncertain nature.
+    csv file from multiple raw source files.
 
-    It individually checks every provided CSV for overlaps and tries to handle
-    them and if duplicate timestamps pass into the concatenated file, the
-    process fails.
+    Various checks deduct whether these files can be merged. Because these
+    source files must be kept intact, potential needed corrections are only
+    attempted in-memory.
     """
-    dataframes = []
+    source_dataframes = []
     for csv_path in csv_like_files:
-        logger.info(f"{csv_path}")
+        click.echo(f"Processing {csv_path}")
 
-        df = load_timeseries(csv_path)
-
-        if df.index.name != 'TIMESTAMP' or \
-            not isinstance(df.index, pd.DatetimeIndex):
-            raise RuntimeError("File does not have a 'TIMESTAMP' index.")
+        # Raw source files must have a timestamp column as direct
+        # data logger outputs.
+        df = load_timeseries(csv_path,
+                             parse_dates=["TIMESTAMP"],
+                             index_col="TIMESTAMP")
 
         # Check tz issues
         tzcheck, tzsuspects = potential_timezone_issue(df)
 
-        while tzcheck:
+        if tzcheck:
 
             click.secho("Potential timezone issue at rows: \n" +
                        f"{df.iloc[tzsuspects]}. " +
                        "Add 'TZ_issue' in config.yaml", fg='bright_red')
 
             rs, all_gaps, tz_gaps = find_timezone_shift(df, tzsuspects)
-            click.secho("Likely occured at\n"
-                       f"{pd.Series(rs.iloc[tz_gaps].index)}",
-                       fg='bright_yellow')
+            click.secho(
+                f"""Likely occured at\n\n{pd.Series(rs.iloc[tz_gaps].index)}""",
+                fg='bright_yellow')
 
             confirm_or_abort("Attempt fixing timezone issue?")
 
             # Fix tz issues
             df, (start, end, delta) = fix_timezone_issue(df, tzsuspects)
-            tzcheck, tzsuspects = potential_timezone_issue(df)
 
-        
-        dupl = find_timeseries_duplicates(df)
-        
-        if dupl.size:
-            raise RuntimeError(click.style(
-                f"Duplicate rows in file {csv_path}\n {dupl}",
-                bold=True
-                ))
 
-        df = add_year_doy_time(df)
-        dataframes.append(df)
+        if find_timeseries_duplicates(df).shape[0] > 0:
+            click.secho(
+                f"{csv_path} omitted due to persisting duplicate values. "
+                "Fix it and repeat the process if you need it included.",
+                fg="bright_yellow")
+            continue
+
+        source_dataframes.append(df)
 
     # Run concatenation and sort.
     # We can sort because incase of duplicates it fails later.
-    concatenated_dataframes = pd.concat(dataframes).sort_index()
+    concatenated_dataframes = pd.concat(source_dataframes, axis=0).sort_index()
     concatenated_dataframes.drop_duplicates(
         # Don't include record in the duplication equality check.
         subset=concatenated_dataframes.columns.difference(["RECORD"]),
@@ -104,11 +101,13 @@ def main(csv_like_files: list[str], output):
     resampled_concatenated_dataframes, tz_gaps = \
         find_timeseries_gaps(concatenated_dataframes)
 
-    if len(tz_gaps):
+    if tz_gaps.size > 0:
         missing_rows = resampled_concatenated_dataframes.index[tz_gaps]
-        logger.warning(click.style(f"\nThere were {len(missing_rows)} missing "
-                       "rows in the timeseries:\n"
-                       f"\n{pd.Series(missing_rows)}"), fg="bright_yellow")
+        click.secho(f"""
+There will be {len(missing_rows)} missing rows in the timeseries
+that will be filled with NaN values:            
+{pd.Series(missing_rows)}\n""")
+        confirm_or_abort("Continue?")
 
     # Break timestamp to Year, DOY, Time.
     resampled_concatenated_dataframes = \
@@ -117,10 +116,12 @@ def main(csv_like_files: list[str], output):
     # Turn index to column and persist.
     # We can probably drop the RECORD column.
     dataframe_confirm_if_overwrite(resampled_concatenated_dataframes, output)
-    click.secho("Successfully created a new log file containing "
+    click.secho("Successfully created a new master file containing "
                 f"{resampled_concatenated_dataframes.shape[0]} rows.",
                 fg="bright_green")
-    return 0
+
+
+    sys.exit(0)
 
 
 if __name__ == "__main__":
