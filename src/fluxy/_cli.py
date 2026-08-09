@@ -6,6 +6,8 @@ import importlib
 import colorama
 
 from pathlib import Path
+from collections import defaultdict
+
 import logging
 
 colorama.init(autoreset=True, wrap=True)
@@ -38,7 +40,32 @@ class SphinxCleanGroup(click.Group):
         self.help = original_help
 
 
-@click.group(name="fluxy", cls=SphinxCleanGroup)
+class SectionedGroup(SphinxCleanGroup):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.sections = defaultdict(list)
+
+    def format_commands(self, ctx, formatter):
+
+        for section_name, cmds in self.sections.items():
+            
+            rows = []
+            for cmd in cmds:
+                rows.append((cmd.name, cmd.get_short_help_str()))
+            
+            if rows:
+                with formatter.section(section_name):
+                    formatter.write_dl(rows)
+
+    def add_command(self, cmd: click.Command,
+                    name: str | None = None,
+                    section: str | None = None) -> None:
+        if section:
+            self.sections[section].append(cmd)
+        return super().add_command(cmd, name)
+
+
+@click.group(name="fluxy", cls=SectionedGroup)
 @click.pass_context
 def main(ctx: click.Context):
     r"""Welcome to Biogeotrace Lab's Fluxy -
@@ -63,7 +90,7 @@ def main(ctx: click.Context):
 for path in sorted(SCRIPTS.glob("[!_]*.py")):
     module = f"fluxy.scripts.{path.stem}"
     module = importlib.import_module(module)
-    main.add_command(module.main, module.main.name)
+    main.add_command(module.main, module.main.name, "Commands")
 
 
 if __name__ == "__main__":
