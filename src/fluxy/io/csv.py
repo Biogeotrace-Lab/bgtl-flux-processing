@@ -1,12 +1,13 @@
 import pandas as pd
-from ..utils.config import DefaultOpts
-from ..utils.config import SiteConfig
+from ..utils.config import SiteConfiguration
+from ..utils.config import DefaultConfiguration
 from ..utils.config import ReadCsvOpts
 from ..utils.config import get_default_config
 from ..utils.prompt import confirm_or_abort
 from ..utils.fs import create_backup
 
 from typing import Unpack
+from typing import IO
 
 import os
 import click
