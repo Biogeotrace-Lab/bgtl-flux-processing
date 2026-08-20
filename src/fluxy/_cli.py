@@ -90,7 +90,13 @@ def main(ctx: click.Context):
 for path in sorted(SCRIPTS.glob("[!_]*.py")):
     module = f"fluxy.scripts.{path.stem}"
     module = importlib.import_module(module)
-    main.add_command(module.main, module.main.name, "General commands")
+    if path.stem.startswith('met'):
+        section = 'Meteorology'
+    elif path.stem.startswith('flux'):
+        section = 'Fluxes'
+    else:
+        section = "General"
+    main.add_command(module.main, module.main.name, section)
 
 
 if __name__ == "__main__":
