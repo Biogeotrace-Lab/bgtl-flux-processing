@@ -6,7 +6,7 @@ import click
                short_help="Add phenocam RGB metadata columns to a " \
                "meteorological file.")
 @click.option("-m", "--met-file", metavar="MET_FILE",
-              help="The meteorological file to edit.",
+              help="The meteorological CSV file to edit.",
               type=click.Path(exists=True))
 @click.option("-p", "--pheno", metavar="PHENO_FOLDER",
               help="The folder holding the phenology images.",
