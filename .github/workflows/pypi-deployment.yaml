@@ -1,4 +1,4 @@
-name: Fluxy deployment to PyPI
+name: Fluxy PyPI
 
 on:
   release:
