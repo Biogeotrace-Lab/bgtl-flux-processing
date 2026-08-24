@@ -50,18 +50,18 @@ def main(met_file, pheno_folder):
         with tqdm(phenocam_metadata_paths,
                   desc="Loading phenology info...",
                   total=len(phenocam_metadata_paths),
-                  unit="file") as pbar:
+                  unit="files") as pbar:
             for line in f:
                 bkey, bvalue = line.split(b'=', 1)
 
                 if bkey not in [b'red', b'green', b'blue']:
                     continue
 
-                name = Path(f.filename()).stem
-                datestring = name.split("_", 1)[-1]
                 data[bkey.decode('utf-8')].append(int(bvalue))
 
                 if bkey == b'red':
+                    name = Path(f.filename()).stem
+                    datestring = name.split("_", 1)[-1]
                     timestamp = datetime.strptime(datestring, "%Y_%m_%d_%H%M%S")
                     indices.append(timestamp)
                     pbar.update()
@@ -81,7 +81,7 @@ def main(met_file, pheno_folder):
     phenology_added = pd.concat([met_dataframe, phenology_dataframe],
                                 axis=1)
 
-    dataframe_confirm_if_overwrite(phenology_added, met_file)
+    # dataframe_confirm_if_overwrite(phenology_added, met_file)
 
     sys.exit(0)
 
