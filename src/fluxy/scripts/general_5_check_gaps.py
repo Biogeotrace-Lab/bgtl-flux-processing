@@ -3,7 +3,7 @@ import click
 import logging
 
 from ..io.csv import load_timeseries
-from ..utils.timeseries_checks import find_timeseries_gaps
+from ..utils.timeseries import find_timeseries_gaps
 from ..utils.checks import QualityControl
 
 logger = logging.getLogger(__name__)

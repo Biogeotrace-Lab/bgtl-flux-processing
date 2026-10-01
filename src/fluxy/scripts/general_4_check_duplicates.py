@@ -2,7 +2,7 @@ import sys
 import click
 
 from ..io.csv import load_timeseries
-from ..utils.timeseries_checks import find_timeseries_duplicates
+from ..utils.timeseries import find_timeseries_duplicates
 from ..utils.checks import QualityControl
 
 

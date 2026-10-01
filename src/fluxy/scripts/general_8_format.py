@@ -13,7 +13,7 @@ from ..io.csv import load_timeseries
 from ..utils.paths import change_directory
 from ..io.csv import dataframe_confirm_inplace_modification_with_backup
 from ..io.csv import dataframe_confirm_if_overwrite
-from ..utils.timeseries_checks import find_timeseries_gaps
+from ..utils.timeseries import find_timeseries_gaps
 from ..utils.fs import recover_backup
 
 from ._options import CommandWithMutuallyExclusiveOptions

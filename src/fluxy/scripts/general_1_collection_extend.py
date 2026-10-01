@@ -6,8 +6,8 @@ import pandas as pd
 from ..io.csv import load_timeseries
 
 from ..utils.conversions import add_year_doy_time
-from ..utils.timeseries_checks import find_timeseries_duplicates
-from ..utils.timeseries_checks import find_timeseries_gaps
+from ..utils.timeseries import find_timeseries_duplicates
+from ..utils.timeseries import find_timeseries_gaps
 
 from ..utils.fs import create_backup
 from ..utils.fs import confirm_to_recover_backup
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 @click.option("--show-rows", type=int, required=False, default=1000,
               help="Number of rows to print in report.")
 def main(extension: str, master: str, recover: bool, show_rows: int):
-    r"""Safely extend a log master file with a csv extension file.
+    r"""Safely extend a L0 meteorology timeseries.
 
     Asserts the extension is a continuation of the master file without jumps,
     it has not gaps, or duplicated rows. Asks for confirmation to proceed.
@@ -158,18 +158,18 @@ def main(extension: str, master: str, recover: bool, show_rows: int):
         bold=True
         )
 
-    if confirm_or_abort("Write changes to master file?"):
-        # Backup process. Make a backup before continuing.
-        create_backup(master)
+    # Aborts if not verified.
+    confirm_or_abort("Write changes to master file?")
 
-        # Write to disk.
-        # Eventually we could explore only appending
-        # instead of rewriting the file from scratch.
-        extended_master_dataframe.to_csv(master)
-        click.echo("Changes applied sucessfully.")
-        return 0
+    # Backup process. Make a backup before continuing.
+    create_backup(master)
 
-    raise click.Abort()
+    # Write to disk.
+    # Eventually we could explore only appending
+    # instead of rewriting the file from scratch.
+    extended_master_dataframe.to_csv(master)
+    click.echo("Changes applied sucessfully.")
+    return 0
 
 
 if __name__ == '__main__':

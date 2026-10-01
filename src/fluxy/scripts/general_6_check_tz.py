@@ -3,9 +3,9 @@ import click
 import pandas as pd
 
 from ..io.csv import load_timeseries
-from ..utils.timeseries_checks import potential_timezone_issue
-from ..utils.timeseries_checks import find_timezone_shift
-from ..utils.timeseries_checks import fix_timezone_issue
+from ..utils.timeseries import potential_timezone_issue
+from ..utils.timeseries import find_timezone_shift
+from ..utils.timeseries import fix_timezone_issue
 from ..utils.prompt import confirm_or_abort
 from ..utils.fs import create_backup
 from ..utils.fs import recover_backup
