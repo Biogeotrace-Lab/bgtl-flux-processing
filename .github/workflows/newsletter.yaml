@@ -1,0 +1,63 @@
+name: Newsletter
+
+on:
+  release:
+    types: [published]
+  workflow_run:
+    workflows: ["TODO"] # Must match the exact 'name' of the first workflow
+    types:
+      - completed
+
+jobs:
+  notify-new-version:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'release'
+    
+    environment: newsletter
+
+    steps:
+      # Step 1: Read and mask the email list
+      - name: Mask Mailing List
+        id: mailing_list
+        run: |
+          # Store the raw variable in a bash variable
+          RAW_EMAILS="${{ vars.MAILING_LIST }}"
+
+          # 1. Register the raw value with the runner's masking engine
+          echo "::add-mask::$RAW_EMAILS"
+
+          # 2. Save it to $GITHUB_OUTPUT so subsequent steps can use it
+          echo "emails=$RAW_EMAILS" >> $GITHUB_OUTPUT
+
+      - name: Send notification email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.EMAIL_ADDRESS }}
+          password: ${{ secrets.APP_PASSWORD }}
+
+          # Message Details
+          subject: Fluxy update! ${{ job.status }}
+
+          to: "Fluxy Update Subscribers <${{ secrets.GMAIL_ADDRESS }}>"
+          from: '"Biogeotrace Lab Packages" <${{ secrets.GMAIL_ADDRESS }}>'
+          bcc: ${{ steps.mailing_list.outputs.emails }}
+
+          # Enable automatic Markdown parsing
+          convert_markdown: true
+
+          html_body: |
+            Build Update for ${{ github.repository }}
+            =========================================
+            A new fluxy version is available on PyPI.
+            Upgrade to it using `pip install --upgrade bgtl-fluxy`.
+            
+            Branch: ${{ github.ref_name }}
+            Actor: ${{ github.actor }}
+            
+            View run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            Status: ${{ job.status }}
