@@ -23,12 +23,16 @@ def load_timeseries(csv_path: str | Path | os.PathLike | IO[bytes],
                     **kwargs: Unpack[ReadCsvOpts]) -> pd.DataFrame:
     """Load CSV into a DataFrame with preconfigured options in `config.yaml`
     """
-    # Replace with kwargs if provided.
-    read_csv_opts = config.read_csv_opts if not kwargs else [kwargs]
+    # Extract read_csv opts from configuration
+    read_csv_opts = config.read_csv_opts
     errors = []
 
     for opts in read_csv_opts:
         try:
+            # Update opts with kwargs overload.
+            opts.update(kwargs)
+
+            # Load the actual file with updated opts.
             timeseries = pd.read_csv(csv_path, **opts) 
 
             if timeseries.dtypes.isin(["object", "str"]).any():
@@ -40,6 +44,7 @@ def load_timeseries(csv_path: str | Path | os.PathLike | IO[bytes],
         except Exception as e:
             errors.append(e.__repr__())
 
+    click.echo()
     click.echo(f"Couldn't load timeseries {csv_path} with errors:")
     click.echo(f"{"\n\n".join(errors)}")
     raise click.Abort()
@@ -63,7 +68,7 @@ def dataframe_confirm_inplace_modification(df: pd.DataFrame,
                                            path: str) -> None:
     """Modify CSV file in place with confirmation.
     """
-    confirm_or_abort("Modify file inplace?")
+    confirm_or_abort(f"Modify {path} inplace?")
     df.to_csv(path)
     click.echo("File modified inplace.")
 
@@ -73,7 +78,7 @@ def dataframe_confirm_if_overwrite(df: pd.DataFrame, path: str | Path) -> None:
     """
     msg = "CSV file saved successfully."
     if os.path.exists(path):
-        confirm_or_abort("File already exists. Overwrite?")
+        confirm_or_abort(f"{path} already exists. Overwrite?")
         msg = f"Overwritten {path}."
     df.to_csv(path)
     click.echo(msg)
