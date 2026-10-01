@@ -24,7 +24,9 @@ dependencies = [
     "rich",
     "typing_extensions",
     "msgspec[yaml]",
-    "hdf5storage"
+    "hdf5storage",
+    "httpx[http2]",
+    "dearpygui"
 ]
 
 readme = "README.md"
