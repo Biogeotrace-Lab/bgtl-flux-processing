@@ -20,3 +20,13 @@ xema_namings = {
     51: "DVVx10",
     72: "PPTx1min"
 }
+
+
+xema_meteo_mappings = {
+    "TA_Avg": "XEMA_T",
+    "RH_Avg": "XEMA_HR",
+    "PA": "XEMA_P",
+    "PRECIP_Tot": "XEMA_PPT",
+    "PAR_1_Avg": "XEMA_RS",
+    "SW_IN_Avg": "XEMA_RS",
+}
