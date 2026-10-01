@@ -22,25 +22,27 @@ from collections import defaultdict
 
 @click.command(name="process-L1",
                short_help="Not implemented.")
-@click.option("--L0-source-folder", "-l0", metavar="FOLDER_PATH", required=True,
+@click.option("--L0-source-folder", "-L0", metavar="FOLDER_PATH", required=True,
               type=click.Path(exists=True, file_okay=False),
               help="The parent folder for the raw flux data to process.")
-@click.option("--L1-destination-folder", "-l1", metavar="FOLDER_PATH",
+@click.option("--L1-destination-folder", "-L1", metavar="FOLDER_PATH",
               required=True,
               type=click.Path(file_okay=False),
               help="The destination folder for the processed L0 flux data.")
-@click.option("--pattern", "-p",
-              type=str, required=True,
+@click.option("--pattern", "-p", "source_pattern",
+              type=str,
               help="The glob pattern for matching folder files. Use ** for "
               "multilevel globbing. Always wrap in single quotes ''. "
-              "(e.g. '**/*.ghg')")
+              "(Defaults to '**/*.ghg')",
+              default='**/*.mat')
 @click.option("--config", "-c", "config_name", metavar="CONFIG_NAME",
               required=True)
-def main(raw_flux_folder, l0_destination_folder, pattern, config_name):
-    """Collect raw flux measurements into daily L0 files."""
+def main(l0_source_folder, l1_destination_folder, source_pattern, config_name):
+    """Not Implemented"""
+    raise NotImplementedError()
     evaluator = MathEvaluator()
     config = load_configuration(config_name)
-    ranges = {k: v['range'] for k, v in config.L1.items() if 'range' in v}
+    ranges = {k: v.range for k, v in config.L1.items() if v is not None}
     ranges = pd.DataFrame(ranges, index=['min', 'max'], dtype=object)
     # ranges = ranges.map(evaluator.eval).astype(object)
     # ranges.fillna(None, inplace=True)
