@@ -52,13 +52,14 @@ def find_timezone_shift(df: pd.DataFrame, tz_suspects: np.ndarray):
             gap_positions[last_matching_gap:last_matching_gap+offset])
 
 
-def find_timeseries_gaps(df: pd.DataFrame):
+def find_timeseries_gaps(df: pd.DataFrame,
+                         freq: pd.Timedelta | str = '30 min'):
     """Identify timeseries gaps.
 
     Return the resampled gap-filled timeseries dataframe
-    together with the gap-filled indices.
+    together with the gap-filled indices, based on an expected frequency.
     """
-    resampled = df[~df.index.duplicated()].resample('30 min').asfreq()
+    resampled = df[~df.index.duplicated()].resample(freq).asfreq()
     gaps = resampled.index.difference(df.index)
     gap_mask = resampled.index.isin(gaps)
     gap_positions = np.where(gap_mask)[0]
@@ -128,3 +129,6 @@ def fix_timezone_issue(df: pd.DataFrame, suspects: np.ndarray):
     df.index.name = 'TIMESTAMP'
     return df, (start_index, end_index, timedelta)
 
+
+def dataframe_gap_lengths(dataframe: pd.DataFrame):
+    ...
