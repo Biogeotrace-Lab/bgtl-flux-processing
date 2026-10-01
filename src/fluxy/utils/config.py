@@ -40,31 +40,32 @@ class ReadCsvOpts(TypedDict, total=False):
     usecols: list[str]
 
 # @dataclass
-class ConversionConfig(TypedDict, total=False):
-    scalar: float | str
-    offset: float | str
-    lower: float | str
-    upper: float | str
+class VoltsToUnitsConfig(msgspec.Struct):
+    scalar: float | str = 1.
+    offset: float | str = 0.
+    lower: float | str | None = None
+    upper: float | str | None = None
 
 type VariableName = str
 type Evaluatable = str | int | float | None
-type ConversionVariables = dict[VariableName, ConversionConfig]
+type VoltsToUnitsConsts = dict[VariableName, VoltsToUnitsConfig]
 
-class FluxVariableInfo(TypedDict, total=False):
+class FluxVariableInfo(msgspec.Struct):
     name: str
-    units: str
-    range: tuple[Evaluatable, Evaluatable]
+    units: str = ''
+    range: tuple[Evaluatable, Evaluatable] = (None, None)
 
 type L0ProcessingLevelConfig = dict[VariableName, FluxVariableInfo | None]
-type L1ProcessingLevelConfig = dict[VariableName, FluxVariableInfo]
+type L1ProcessingLevelConfig = dict[VariableName, FluxVariableInfo | None]
 type ValidRanges = dict[VariableName, tuple[Evaluatable, Evaluatable]]
-type Conversions = dict[datetime.datetime, ConversionVariables]
+type VoltsToUnits = dict[datetime.datetime, VoltsToUnitsConsts]
 type OfflinePeriod = tuple[datetime.datetime, datetime.datetime]
+
 
 class SiteConfiguration(msgspec.Struct):
     site: str
     read_csv_opts: list[ReadCsvOpts] = []
-    conversions: Conversions = {}
+    convert_to_units: VoltsToUnits = {}
     offline: list[OfflinePeriod] = []
     L0: L0ProcessingLevelConfig = {}
     L1: L1ProcessingLevelConfig = {}
@@ -81,15 +82,16 @@ def get_ranges(data: L1ProcessingLevelConfig) -> pd.DataFrame:
     :returns: A DataFrame with ranges per variable column.
     :rtype: pandas.DataFrame
     """
-    return pd.DataFrame({k: v['range'] for k, v in data.items()
-                         if 'range' in v}, index=['min', 'max'],
-                         dtype=object)
+    return pd.DataFrame({k: v.range for k, v in data.items() if v is not None},
+                        index=['min', 'max'],
+                        dtype=object)
 
 
 def _read_config(path: str | Path) -> SiteConfiguration:
     """Read yaml configuration file."""
     with open(path, "rb") as config_stream:
-        return msgspec.yaml.decode(config_stream.read(), type=SiteConfiguration)
+        return msgspec.yaml.decode(config_stream.read(),
+                                   type=SiteConfiguration)
 
 
 def _read_default_config(path: str | Path) -> DefaultConfiguration:
