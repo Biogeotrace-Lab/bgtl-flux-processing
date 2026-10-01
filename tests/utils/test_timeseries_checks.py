@@ -1,7 +1,7 @@
 from unittest import TestCase
-from fluxy.utils.timeseries_checks import find_timezone_shift
-from fluxy.utils.timeseries_checks import fix_timezone_issue
-from fluxy.utils.timeseries_checks import potential_timezone_issue
+from fluxy.utils.timeseries import find_timezone_shift
+from fluxy.utils.timeseries import fix_timezone_issue
+from fluxy.utils.timeseries import potential_timezone_issue
 
 import pandas as pd
 
