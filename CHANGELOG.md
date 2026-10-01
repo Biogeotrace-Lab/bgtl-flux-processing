@@ -1,3 +1,24 @@
+## [2.0.0] - 2026-10-01
+
+### 🚀 Features
+
+- Updated check_gaps to use QualityControl for reporting
+- Added L0 processing routing for fluxes
+- Added add-pressure routine WIP
+- Added report table base and comparison report in utils.checks
+- Added help sections in app help message
+- Added add-phenology command to include phenocam metadata to meteo timeseries
+- [**breaking**] Updated the configuration model
+- Added dataframe scaling function in conversions
+- Implemented basic multiprocessing plotter for interactive data inspection
+- [**breaking**] Updated load_timeseries to have config overridable by kwargs
+- Implemented loading and writing interfaces of `.mat` files in `fluxy.io.matlab`
+- Fully updated `XEMAClient` implementation; Made async with traffic management and recursive collection of response pages
+- Implemented query fragmentation for xema data in `XEMADataFrame` for request optimization
+- Implemented add phenology command for extracting average RGB intensities from phenocam jpeg images
+- Implemented add-pressure command for adding pressure values from averaged L0 flux csv files
+- Implemented add-xema command for directly downloading the attaching XEMA meteorological values for the dataset in question
+- Improves L0 process to be robust for errors in files
 ## [1.1.0] - 2026-07-22
 
 ### 🚀 Features
