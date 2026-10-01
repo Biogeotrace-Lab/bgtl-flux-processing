@@ -15,6 +15,10 @@ logging.basicConfig(level=logging.WARNING)
 
 SCRIPTS = Path(__file__).parent / "scripts"
 
+import pandas as pd
+
+pd.options.display.min_rows = 500
+
 
 class SphinxCleanGroup(click.Group):
     def format_help(self, ctx, formatter):
