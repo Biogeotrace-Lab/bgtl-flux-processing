@@ -17,62 +17,140 @@ read_csv_opts:
     parse_dates: null
     index_col: null
 
-# Conversion section.
-conversions:
+# Calibrations section.
+calibrations:
   2020-01-01 00:00:00:
     TA_Avg:
-      scalar: 1
-      offset: 0
       lower: -10
       upper: 50
     RH_Avg:
-      scalar: 1
       lower: 1
       upper: 100
     PA:
-      scalar: 1
       lower: 85
       upper: 105
+    PRECIP:
+      lower: 0
+      upper: 500
     PAR_1_Avg:
-      scalar: 151.74506828528072
-      offset: 0
+      scalar: 1000/6.64
       lower: -5
       upper: 3000
     PAR_2_Avg:
-      scalar: 150.60240963855424
-      offset: 0
+      scalar: -1000/6.47
       lower: -5
       upper: 3000
     SW_IN_Avg:
-      scalar: 75.35795026375283
-      offset: 0
+      scalar: 1000/13.20
       lower: -150
       upper: 1500
     SW_OUT_Avg:
-      scalar: 94.33962264150944
-      offset: 0
+      scalar: 1000/13.04
       lower: -150
       upper: 3000
     LW_IN_Avg:
-      scalar: 105.70824524312896
+      scalar: 1000/10.15
       offset: 5.67 * 10**-8 * (CNR4TC_Avg + 273.15) ** 4
       lower: -150
       upper: 1500
-      var: CNR4TC_Avg
     LW_OUT_Avg:
-      scalar: 108.10810810810811
+      scalar: 1000/10.49
       offset: 5.67 * 10**-8 * (CNR4TC_Avg + 273.15) ** 4
       lower: -200
       upper: 200
-      var: CNR4TC_Avg
-    SW_IN_NR01_Avg:
-      scalar: 69.44444444444444
-    SW_OUT_NR01_Avg:
-      scalar: 60.24096385542168
-    LW_IN_NR01_Avg:
-      scalar: 88.49557522123894
-    LW_OUT_NR01_Avg:
-      scalar: 86.20689655172414
+    SHF_1_Avg:
+      scalar: 1000/62.12
+      lower: -250
+      upper: 350
+    SHF_2_Avg:
+      scalar: 1000/63.89
+      lower: -250
+      upper: 350
+    SHF_3_Avg:
+      scalar: 1000/63.86
+      lower: -250
+      upper: 350
+    TC_min2_1_Avg:
+      lower: -5
+      upper: 55
+    TC_min2_2_Avg:
+      lower: -5
+      upper: 55
+    TC_min2_3_Avg:
+      lower: -5
+      upper: 55
+    TC_min4_1_Avg:
+      lower: -5
+      upper: 55
+    TC_min4_2_Avg:
+      lower: -5
+      upper: 55
+    TC_min4_3_Avg:
+      lower: -5
+      upper: 55
+    TC_min8_1_Avg:
+      lower: -5
+      upper: 55
+    TC_min8_2_Avg:
+      lower: -5
+      upper: 55
+    TC_min8_3_Avg:
+      lower: -5
+      upper: 55
+    TC_min16_1_Avg:
+      lower: -5
+      upper: 55
+    TC_min16_2_Avg:
+      lower: -5
+      upper: 55
+    TC_min16_3_Avg:
+      lower: -5
+      upper: 55
+    TC_min32_1_Avg:
+      lower: -5
+      upper: 55
+    TC_min32_2_Avg:
+      lower: -5
+      upper: 55
+    TC_min32_3_Avg:
+      lower: -5
+      upper: 55
+    TC_2_1_Avg:
+      lower: -5
+      upper: 55
+    TC_2_2_Avg:
+      lower: -5
+      upper: 55
+    TC_2_3_Avg:
+      lower: -5
+      upper: 55
+    TC_4_1_Avg:
+      lower: -5
+      upper: 55
+    TC_4_2_Avg:
+      lower: -5
+      upper: 55
+    TC_4_3_Avg:
+      lower: -5
+      upper: 55
+    TC_8_1_Avg:
+      lower: -5
+      upper: 55
+    TC_8_2_Avg:
+      lower: -5
+      upper: 55
+    TC_8_3_Avg:
+      lower: -5
+      upper: 55
+    TC_min32_1_Avg:
+      lower: -5
+      upper: 55
+    TC_32_2_Avg:
+      lower: -5
+      upper: 55
+    TC_32_3_Avg:
+      lower: -5
+      upper: 55
 
 # Known periods of tower downtime.
 offline_periods:
@@ -84,87 +162,68 @@ L0: # L0 processing: data collection and column mapping.
   Diagnostic Value:
     name: Diag75
     units: ''
+    range: [0, 255]
   CO2 (mmol/m^3):
     name: C
     units: mmol/m^3
+    range: [0, 50]
   H2O (mmol/m^3):
     name: Q
     units: mmol/m^3
+    range: [0, 2000]
   Temperature (C):
     name: T_li75
     units: C
+    range: [-10, 70]
   Pressure (kPa):
     name: P_li75
     units: Kpa
+    range: [90,  120]
   Cooler Voltage (V):
     name: Cooler
     units: V
+    range: [0,   5]
   Dew Point (C):
     name: Tdew
     units: C
+    range: [-40, 70] 
   CO2 Signal Strength:
     name: SS
     units: "%"
+    range: [0,   108]
   U (m/s):
     name: U
     units: m/s
+    range: [-50, 50] 
   V (m/s):
     name: V
     units: m/s
+    range: [-50, 50] 
   W (m/s):
     name: W
     units: m/s
+    range: [-20, 20] 
   T (C):
     name: Ts
     units: C
+    range: [-5,  50] 
   CH4 Temperature:
     name: T_li77
     units: C
+    range: [-10, 70] 
   CH4 Pressure:
     name: P_li77
     units: Kpa
+    range: [90,  120]
   CH4 Signal Strength:
     name: RSSI
     units: "%"
+    range: [0,   100]
   CH4 Diagnostic Value:
     name: Diag77
     units: ''
+    range: [null, null]
   CH4 Drop Rate (%):
     name: Drop
     units: '%'
-
-L1: # L1 processing: filtering and downsampling
-  Diag75:
-    range: [0, 255]
-  C:
-    range: [0, 50]
-  Q:
-    range: [0, 2000]
-  T_li75:
-    range: [-10, 70]
-  P_li75:
-    range: [90,  120]
-  Cooler:
-    range: [0,   5]
-  Tdew:
-    range: [-40, 70] 
-  SS:
-    range: [0,   108]
-  U:
-    range: [-50, 50] 
-  V:
-    range: [-50, 50] 
-  W:
-    range: [-20, 20] 
-  Ts:
-    range: [-5,  50] 
-  T_li77:
-    range: [-10, 70] 
-  P_li77:
-    range: [90,  120]
-  RSSI:
-    range: [0,   100]
-  Diag77:
-    range: [null, null]
-  Drop:
     range: [0, 100]

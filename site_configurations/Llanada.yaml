@@ -1,5 +1,5 @@
 # Site code.
-site: RV
+site: LN
 
 # Data loading section.
 read_csv_opts:
@@ -29,144 +29,51 @@ calibrations:
     PA:
       lower: 85
       upper: 105
-    PRECIP:
-      lower: 0
-      upper: 500
     PAR_1_Avg:
-      scalar: 1000/6.59
-      lower: -5
-      upper: 3000
-    PAR_2_Avg:
       scalar: 1000/6.64
       lower: -5
       upper: 3000
+    PAR_2_Avg:
+      scalar: -1000/6.47
+      lower: -5
+      upper: 3000
     SW_IN_Avg:
-      scalar: 1000/13.27
+      scalar: 1000/13.20
       lower: -150
       upper: 1500
     SW_OUT_Avg:
-      scalar: 1000/10.60
+      scalar: 1000/13.04
       lower: -150
       upper: 3000
     LW_IN_Avg:
-      scalar: 1000/9.46
+      scalar: 1000/10.15
       offset: 5.67 * 10**-8 * (CNR4TC_Avg + 273.15) ** 4
       lower: -150
       upper: 1500
-      var: CNR4TC_Avg
     LW_OUT_Avg:
-      scalar: 1000/9.25
+      scalar: 1000/10.49
       offset: 5.67 * 10**-8 * (CNR4TC_Avg + 273.15) ** 4
       lower: -200
       upper: 200
     SHF_1_Avg:
-      scalar: 1000/62.08
+      scalar: 1000/62.12
       lower: -250
       upper: 350
     SHF_2_Avg:
-      scalar: 1000/63.09
+      scalar: 1000/63.89
       lower: -250
       upper: 350
     SHF_3_Avg:
-      scalar: 1000/61.49
+      scalar: 1000/63.86
       lower: -250
       upper: 350
-    TC_min2_1_Avg:
-      lower: -5
-      upper: 55
-    TC_min2_2_Avg:
-      lower: -5
-      upper: 55
-    TC_min2_3_Avg:
-      lower: -5
-      upper: 55
-    TC_min4_1_Avg:
-      lower: -5
-      upper: 55
-    TC_min4_2_Avg:
-      lower: -5
-      upper: 55
-    TC_min4_3_Avg:
-      lower: -5
-      upper: 55
-    TC_min8_1_Avg:
-      lower: -5
-      upper: 55
-    TC_min8_2_Avg:
-      lower: -5
-      upper: 55
-    TC_min8_3_Avg:
-      lower: -5
-      upper: 55
-    TC_min16_1_Avg:
-      lower: -5
-      upper: 55
-    TC_min16_2_Avg:
-      lower: -5
-      upper: 55
-    TC_min16_3_Avg:
-      lower: -5
-      upper: 55
-    TC_min32_1_Avg:
-      lower: -5
-      upper: 55
-    TC_min32_2_Avg:
-      lower: -5
-      upper: 55
-    TC_min32_3_Avg:
-      lower: -5
-      upper: 55
-    TC_2_1_Avg:
-      lower: -5
-      upper: 50
-    TC_2_2_Avg:
-      lower: -5
-      upper: 50
-    TC_2_3_Avg:
-      lower: -5
-      upper: 50
-    TC_4_1_Avg:
-      lower: -5
-      upper: 50
-    TC_4_2_Avg:
-      lower: -5
-      upper: 50
-    TC_4_3_Avg:
-      lower: -5
-      upper: 50
-    TC_8_1_Avg:
-      lower: -5
-      upper: 50
-    TC_8_2_Avg:
-      lower: -5
-      upper: 50
-    TC_8_3_Avg:
-      lower: -5
-      upper: 50
-    TC_min32_1_Avg:
-      lower: -5
-      upper: 50
-    TC_32_2_Avg:
-      lower: -5
-      upper: 50
-    TC_32_3_Avg:
-      lower: -5
-      upper: 50
-    q_Avg:
-      lower: 0
-      upper: 0.03
-    q_Std:
-      lower: 0
-      upper: 0.005
-    TA_Std:
-      lower: 0
-      upper: 5
 
 # Known periods of tower downtime.
 offline_periods:
   - []
 
 L0: # L0 processing: data collection and column mapping.
+  Date:
   Time:
   Diagnostic Value:
     name: Diag75
@@ -188,6 +95,10 @@ L0: # L0 processing: data collection and column mapping.
     name: P_li75
     units: Kpa
     range: [90,  120]
+  Cooler Voltage (V):
+    name: Cooler
+    units: V
+    range: [0,   5]
   Dew Point (C):
     name: Tdew
     units: C
