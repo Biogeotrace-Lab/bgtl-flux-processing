@@ -1,26 +1,30 @@
-import requests
+import httpx
+import msgspec
+import asyncio
 
 from datetime import datetime
 
-from pydantic.dataclasses import dataclass
-from pydantic import TypeAdapter
+from tqdm import tqdm
+
+from urllib.parse import urlencode, quote
 
 
-@dataclass
-class XEMARecord:
-    codi_variable: int
+class XEMARecord(msgspec.Struct):
+    odata_id: str = msgspec.field(name="@odata.id")
+    codi_variable: str
     data_lectura: datetime
     valor_lectura: float
 
 
-# For handling a naked JSON array of records.
-XEMAPayloadAdapter = TypeAdapter(list[XEMARecord])
+class ODataQueryResponse(msgspec.Struct):
+    context: str = msgspec.field(name="@odata.context")
+    value: list[XEMARecord]
+    next_link: str | None = msgspec.field(name="@odata.nextLink", default=None)
 
 
 class XEMAClient:
     """Requests-based client for the XEMA database. Query the server using
     an app token from Transparencia Catalunya.
-
 
     Totes les dades mesurades per una EMA passen un control de qualitat per
     determinar si el valor enregistrat és vàlid o no. Per tant, totes les
@@ -39,9 +43,10 @@ class XEMAClient:
     """
 
     DEFAULT_APP_TOKEN = "0XYFJLmsdqS3s6dLxQd9B3ink"
-    data_id = "nzvn-apee"
-    API_query_endpoint = ("https://analisi.transparenciacatalunya.cat"
-                          "/api/v3/views/nzvn-apee/query.json")
+    dataset_id = "nzvn-apee"
+
+    # Checkout OData API https://support.socrata.com/hc/en-us/articles/115005364207-Access-Data-Insights-Data-using-OData
+    ENDPOINT = "https://analisi.transparenciacatalunya.cat/api/odata/v4/nzvn-apee"
 
     fields = ["id",
               "codi_estacio",
@@ -53,80 +58,77 @@ class XEMAClient:
               "codi_base"]
 
     def __init__(self) -> None:
-        self.headers = {"X-App-Token": self.DEFAULT_APP_TOKEN,
-                        "Content-Type": "application/json"}
+        # self.headers = {"X-App-Token": self.DEFAULT_APP_TOKEN}
+        self.headers = {"User-Agent": "Fluxy/1.0 UAB"}
+        self.client = httpx.AsyncClient(headers=self.headers,
+                                        timeout=httpx.Timeout(30, read=1200,
+                                                              connect=5),
+                                        transport=httpx.AsyncHTTPTransport(
+                                            retries=15),
+                                        http2=True,
+                                        limits=httpx.Limits(max_connections=20,
+                                                            max_keepalive_connections=10,
+                                                            keepalive_expiry=60.0))
+        self.semaphone = asyncio.Semaphore(10)
 
-    def _query_json(self, select: str = "*",
-                    where: str | None = None,
-                    limit: int = 100000,
-                    offset: int = 0) -> list[dict]:
-        """Non-validated version of `XEMAClient.query`
-        Kept for debugging and development reasons.
-        """
-        params = self._build_params(select=select,
-                                    where=where,
-                                    offset=offset,
-                                    limit=limit)
+    async def query(self,
+                    select: str | None = None,
+                    filters: tuple[str, ...] | None = None,
+                    top: int = 500, *,
+                    pbar: tqdm | None = None,
+                    payload_buffer: list = []) -> list[XEMARecord]:
+        """Query the Transparencia Catalunya database for XEMA data using their
+        OData RESTapi.
 
-        return requests.get(self.API_query_endpoint,
-                            headers=self.headers,
-                            params=params).json()
-    
-    def _build_params(self,
-                      select: str = "*",
-                      where: str | None = None,
-                      offset: int = 0,
-                      limit: int = 100000):
-        
-        query = f"""
-        select {select} 
-        {'where {where}' if where else ''} 
-        offset {offset}
-        limit {limit}
-        """.format(select=select,
-                   where=where,
-                   limit=limit)
-
-        params = {
-            "query": query,
-            "orderingSpecifier": "discard",
-            "includeSystem": False,
-            "includeSynthetic": False,
-            "timeout": 1200
-        }
-
-        return params
-
-    def query(self,
-              select: str = "*",
-              where: str | None = None,
-              limit: int = 100000,
-              offset: int = 0) ->\
-                  list[XEMARecord]:
-        """Query the Transparencia Catalunya database for XEMA data using an
-        SQL-like statement.
-
-        :param select: The columns (comma separated) to be returned, defaults
-                        to *.
-        :type select: `str`
-        :param where: Filters the rows to be returned, defaults to limit.
-        :type where: `str`
-        :param limit: Max number of results to return, defaults to 100000.
-        :type limit: `int`
-        :param offset: Offset, used for paging. Defaults to 0.
-        :type offset: `int`
         :returns: An array of XEMA records that satisfy the query.
         :rtype: `list[XEMARecord]`
         """
-        params = self._build_params(select=select,
-                                    where=where,
-                                    offset=offset,
-                                    limit=limit)
-        request = requests.get(self.API_query_endpoint,
-                                 headers=self.headers,
-                                 params=params)
-        request.raise_for_status()
+        params = {"$format": "json"}
 
-        return XEMAPayloadAdapter.validate_json(
-                    request.content,
-                    strict=False)
+        if select:
+            params["$select"] = select
+        if filters:
+            params["$filter"] = " and ".join(filters)
+        if top:
+            params["$top"] = top # type: ignore
+
+        param_string = urlencode(params, quote_via=quote)
+        async with self.semaphone:
+            response = await self.client.get(self.ENDPOINT + "?" + param_string)
+        try:
+            response.raise_for_status()
+        except httpx.HTTPError:
+            raise httpx.HTTPError(response.text)
+
+        query = msgspec.json.decode(response.content, type=ODataQueryResponse)
+        payload_buffer = await self._collect_data(query, pbar=pbar, payload_buffer=payload_buffer)
+        return payload_buffer
+
+    def _retry_get(self, *args, **kwargs):
+        return
+
+    async def _collect_data(self, query_response: ODataQueryResponse,
+                            payload_buffer: list,
+                            pbar: tqdm | None) -> list[XEMARecord]:
+        """Collect query data in a shared payload container.
+        """
+        batch = query_response.value
+        payload_buffer += batch
+
+        if pbar:
+            pbar.update(len(batch))
+            pbar.total = max(pbar.total, pbar.n)
+
+        if query_response.next_link is not None:
+            response = await self.client.get(query_response.next_link)
+            try:
+                response.raise_for_status()
+            except httpx.HTTPError:
+                raise httpx.HTTPError(response.text)
+            query_response = msgspec.json.decode(response.content,
+                                                 type=ODataQueryResponse)
+            payload_buffer = await self._collect_data(query_response,
+                                                      payload_buffer,
+                                                      pbar)
+
+        return payload_buffer
