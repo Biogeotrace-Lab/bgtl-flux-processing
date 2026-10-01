@@ -2,16 +2,16 @@
 Map XEMA variables to meteo columns.
 """
 
-xema_variables = {
+xema_namings = {
     1: "Px",
     2: "Pn",
     3: "HRx",
     30: "VV10",
     31: "DV10",
-    32: "TA_Avg",
-    33: "RH_Avg",
-    34: "PA",
-    35: "PRECIP_Tot",
+    32: "T",
+    33: "HR",
+    34: "P",
+    35: "PPT",
     36: "RS",
     40: "Tx",
     42: "Tn",
