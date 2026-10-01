@@ -1,5 +1,8 @@
 import h5py
 import pandas as pd
+import hdf5storage
+
+from pathlib import Path
 
 
 class Matlab73(h5py.File):
@@ -37,3 +40,17 @@ class MatlabFluxDataFrame(pd.DataFrame):
     def __init__(self, filepath: str, keys: list[str]) -> None:
         matfile = Matlab73(filepath)
         super().__init__({k: matfile['data'][k][:].flatten() for k in keys}) # type: ignore
+
+
+def load_dict_from_matlab_73(matfile: str, mdict: dict = {}, **kwargs):
+    return hdf5storage.loadmat(matfile, mdict=mdict, **kwargs)
+
+
+def write_dict_to_matlab_73(output: str | Path, mdict: dict, **kwargs):
+    opts = {"fmt": '7.3',
+            "store_python_metadata": False,
+            "truncate_existing": True,
+            "compress":True, 
+            "gzip_compression_level": 7}
+    opts.update(kwargs)
+    hdf5storage.savemat(output, mdict=mdict, **opts)
