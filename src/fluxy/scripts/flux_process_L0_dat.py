@@ -1,7 +1,6 @@
 import sys
 import click
 import os
-import zipfile
 
 from pathlib import Path
 from datetime import datetime
@@ -16,6 +15,7 @@ from ..utils.dates import date_from_year_and_doy_in_path
 from ..utils.dates import timestamp_from_path
 from ..utils.fs import get_daily_flux_filename
 from ..utils.prompt import confirm_or_abort
+from ..utils.conversions import clip_to_nan
 
 import pandas as pd
 import numpy as np
@@ -28,9 +28,9 @@ from collections import defaultdict
 from tqdm import tqdm
 
 
-@click.command(name="process-L0",
+@click.command(name="process-l0-dat",
                short_help="Collect raw ghg smartflux sensor measurements "
-               "into daily L0 files.")
+               "into daily L0 matlab files.")
 @click.option("--raw-data-folder", "-r", metavar="FOLDER_PATH", required=True,
               type=click.Path(exists=True, file_okay=False),
               help="The parent folder for the raw flux data to process.")
@@ -41,9 +41,9 @@ from tqdm import tqdm
 @click.option("--pattern", "-p", "source_pattern",
               type=str,
               help="The glob pattern for matching folder files. Use ** for "
-              "multilevel globbing. Always wrap in single quotes ''. "
-              "(Defaults to '**/*.ghg')",
-              default='**/*.ghg')
+              "multilevel globbing. Always wrap in single quotes ''.",
+              default='*data*.dat',
+              show_default=True)
 @click.option("--skip-irregular", "-k", "skip_irregular_files",
               is_flag=True,
               help="Skip files that have irregular timestamps.")
@@ -73,8 +73,6 @@ def main(raw_data_folder: str, l0_destination_folder: str,
     output_folder = Path(l0_destination_folder) / config_name
     output_folder.mkdir(exist_ok=True, parents=True)
 
-    source_pattern = os.path.join(raw_data_folder, source_pattern)
-
     last_date = datetime.fromtimestamp(0)
     for root, dirs, files in os.walk(output_folder):
 
@@ -91,10 +89,11 @@ def main(raw_data_folder: str, l0_destination_folder: str,
         if last_date != datetime.fromtimestamp(0):
             break
 
-    raw_flux_files = []
-    flux_data_names = []
-    grouped_files_by_date = defaultdict(list)
+    grouped_files_by_date = defaultdict(lambda: defaultdict(list))
     date = None
+
+    target_file_ext = source_pattern.split(".")[-1]
+
     for root, dirs, files in os.walk(raw_data_folder):
         if 'error' in root: continue
 
@@ -102,50 +101,50 @@ def main(raw_data_folder: str, l0_destination_folder: str,
         files.sort()
 
         for f in files:
-            if f.endswith(".ghg"):
-                datestring = f.split("T")[0]
-                date = datetime.strptime(datestring, "%Y-%m-%d")
 
-                if skip_irregular_files:
-                    timestamp = timestamp_from_path(f)
+            f = Path(f)
+            if f.match(source_pattern):
 
-                    if timestamp.minute % 30 or not timestamp.second == 0:
-                        click.echo(f"WARNING: {f} will be skipped due to "
-                                "having an irregular timestamp.", err=True)
-                        continue
-                
+                # Date parsing.
+                datestring = " ".join(f.stem.split("_")[-3:-1])
+                timestamp_string = " ".join(f.stem.split("_")[-3:])
+                date = datetime.strptime(datestring, "%Y %j")
+
                 # Only redo last date, if any files found
                 # in destination.
                 if date < last_date: continue
-
+            
                 # Date is ambiguous. Skip.
                 # Verified dates agree with year folder.
                 if str(date.year) not in root: continue
-
-                # If it's new, append to TODO container.
-                raw_flux_files.append(os.path.join(root, f))
-
-                # Append the expected internal CSV name.
-                flux_data_names.append(Path(f).with_suffix('.data').name)
-
+            
                 # Add files to the DOY (datestring) key.
-                grouped_files_by_date[datestring].append((raw_flux_files[-1],
-                                                          flux_data_names[-1]))
+                # Add files to be merged in the same timestamp entry.
+                # All relevant data are collected hierarchically here.
+                # All data collected should be merged during processing.
+                grouped_files_by_date[datestring][timestamp_string]\
+                    .append(os.path.join(root, f))
 
-    click.echo(f"The process will be initiated for {config_name} " +
-               (f"from {last_date} " 
-                if last_date > datetime.fromtimestamp(0) 
-                else "")
-               + f"until {date}.")
-    click.echo()
+    if grouped_files_by_date.keys():
+        click.echo(f"The process will be initiated for {config_name} " +
+                (f"from {last_date} " 
+                    if last_date > datetime.fromtimestamp(0) 
+                    else "")
+                + f"until {date}.")
+        click.echo()
+    else:
+        click.echo("No new dates.")
+        raise click.Abort()
+
     confirm_or_abort("Proceed?")
 
     with ProcessPoolExecutor(max_workers=4) as executor:
         try:
             futures = [
-                executor.submit(process_date, date, files, config,
-                                output_folder)
-                for date, files in grouped_files_by_date.items()
+                # Select the corresponding process based on file extension.
+                executor.submit(process_doy_dat, date, date_data,
+                                config, output_folder)
+                for date, date_data in grouped_files_by_date.items()
             ]
 
             with tqdm(as_completed(futures), desc="Processing dates...",
@@ -160,17 +159,16 @@ def main(raw_data_folder: str, l0_destination_folder: str,
     sys.exit(0)
 
 
-def process_date(date: str, files: list[str], config: SiteConfiguration,
-                 output_folder: Path) -> str:
-    """Each L0 full day of year has to be processed together for concatenation.
+def process_doy_dat(date: str, date_data: dict[str, list[str]], config: SiteConfiguration,
+                    output_folder: Path) -> str:
+    """A processor function for compressed ghg smartflux files.
+
+    Each L0 full day of year has to be processed together for concatenation.
     """
-
     # Sort by timestamp on stem.
-    files = sorted(files, key=lambda x: Path(x[0]).stem.split("_")[0])
-
+    sorted_timestamps = sorted(date_data.keys())
     try:
 
-        columns = list(config.L0.keys())
         column_mappings = {
             k: v.name for k, v in config.L0.items() if v is not None
 
@@ -178,74 +176,59 @@ def process_date(date: str, files: list[str], config: SiteConfiguration,
         column_units = {
             'units': [v.units for k, v in config.L0.items() if v is not None]
                       }
+        
+        # We need a series of minimum bounds and a series of maximum bounds.
+        lower_limits = pd.Series({
+                k: v.range[0] if v else None
+                for k, v in config.L0.items()
+            }, dtype=float)
+
+        upper_limits = pd.Series({
+                k: v.range[1] if v else None
+                for k, v in config.L0.items()
+            }, dtype=float)
 
         # Build output filename here and check if exists
         # in outputs. Skip iteration if exists.
-        start_of_day_timestamp = datetime.strptime(date, "%Y-%m-%d")
+        date_format = "%Y %j"
+        start_of_day_timestamp = datetime.strptime(date, date_format)
+
         t_info = start_of_day_timestamp.timetuple()
         year = t_info.tm_year
         doy = t_info.tm_yday
-        output_20hz = get_daily_flux_filename(site=config.site,
-                                              desc='20hz',
-                                              year=year,
-                                              doy=doy,
-                                              ext='mat')
-        output_30m = get_daily_flux_filename(site=config.site,
-                                             desc='30m',
-                                             year=year,
-                                             doy=doy,
-                                             ext='csv')
-        output_year_dir = output_folder / f"{config.site}_{year}" / "DailyMAT"
-
-        # Build the year folder if not exists.
-        output_dir_20hz = output_year_dir / "20Hz"
-        output_dir_30m = output_year_dir / "30m"
-
-        # Create output directories.
-        output_year_dir.mkdir(exist_ok=True, parents=True)
-        output_dir_20hz.mkdir(exist_ok=True)
-        output_dir_30m.mkdir(exist_ok=True)
-
-        # Final output path.
-        output_20hz = output_dir_20hz / output_20hz
-        output_30m = output_dir_30m / output_30m
 
         # Collection container for 30min bundles.
         flux_dataframes: list[pd.DataFrame] = []
 
-        # The .ghg file and the csv path inside it.
-        for compressed_file, interior_csv_name in files:
-            with zipfile.ZipFile(compressed_file) as z:
-                csv_data = z.open(interior_csv_name, "r")
-                try:
-                    dataframe = load_timeseries(csv_data, header=7, sep="\t",
-                                                parse_dates=None,
-                                                index_col=None,
-                                                engine='pyarrow',
-                                                dtype_backend='pyarrow',
-                                                na_values=["-9999"],
-                                                skiprows=None,
-                                                usecols=columns)
-                except Exception as e:
-                    click.echo(e, err=True)
-                    click.echo(f"Error reading data. {compressed_file} is skipped.", err=True)
-                    continue
+        for timestamp in sorted_timestamps:
+            files = date_data[timestamp]
 
-                dataframe['TIMESTAMP'] = date + " " + dataframe.Time
+            timestamp_dfs = []
+            for f in files:
+                # All sides have RECORDS. Only one should be kept.
+                t_df = load_timeseries(f,
+                                       header=1,
+                                       date_format="mixed")
+                # Do we want to discard any clock corrected rows here?
+                # indices = t.index.drop_duplicates(keep='last')
+                timestamp_dfs.append(t_df)
 
-                dataframe['TIMESTAMP'] = pd.to_datetime(
-                    dataframe['TIMESTAMP'],
-                    format="%Y-%m-%d %H:%M:%S:%f")
-
-                flux_dataframes.append(dataframe)
+            dataframe = pd.concat(timestamp_dfs, axis=1)
+            # Drop duplcated campbell columns (e.g. RECORD)
+            dataframe = dataframe.loc[:, ~dataframe.columns.duplicated()]
+            flux_dataframes.append(dataframe)
 
         # Concatenated 24H timeseries.
         daily_collection = pd.concat(flux_dataframes, sort=False)
-
+        daily_collection = clip_to_nan(daily_collection
+                                       .select_dtypes(exclude=['string',
+                                                               "datetime"]),
+                                       lower_limits,
+                                       upper_limits)
+        daily_collection.index = pd.to_datetime(daily_collection.index)
         # Properly align timestamps to expected frequency.
-        daily_collection['TIMESTAMP'] =\
-              daily_collection['TIMESTAMP'].dt.round("50ms")
-        daily_collection.set_index("TIMESTAMP", inplace=True)
+        daily_collection.index =\
+              daily_collection.index.to_series().dt.round("50ms")
 
         # Keep last occurrences as GPS corrected anchors.
         duplicate_stamps = daily_collection.index.duplicated(keep='last')
@@ -266,18 +249,36 @@ def process_date(date: str, files: list[str], config: SiteConfiguration,
             click.echo(f"Date {date} has {t_issues.sum()} timestamps out of order.", err=True)
             raise click.Abort()
 
+        # Calculate frequency.
+        Hz = int(round(daily_collection # type: ignore
+                       .resample("1s")
+                       .count()
+                       .pipe(lambda s: s[s > 0])
+                       .median(axis=None), 
+                       0))
+
+        # If Hz unexpected.
+        if Hz not in [20, 10]:
+            click.echo(f"\nBad frequency estimation for {date}: {Hz}")
+            raise click.Abort()
+
         # Reindex dataframe to have timestamps for the entire doy.
         # Missing stamps are inserted with NaN values.
         full_day_index = pd.date_range(start_of_day_timestamp,
-                                       periods=24 * 60 * 60 * 20,
-                                       freq='50ms', name="TIMESTAMP")
+                                       end=start_of_day_timestamp +
+                                       pd.Timedelta('1D'),
+                                       freq='50ms',
+                                       name="TIMESTAMP",
+                                       inclusive='left')
 
         # Forces output to 20hz if slower (by filling gaps as NaN).
         # This causes reordering if index is out of order. WARNING.
         daily_collection = daily_collection.reindex(full_day_index)
 
-        # Only include columns that have mappings defined.
-        daily_collection = daily_collection[column_mappings.keys()]
+        # Round values to less decimals.
+        daily_collection = daily_collection.round(3)
+
+        # Include all columns and rename what was provided in config.
         daily_collection.rename(columns=column_mappings, inplace=True)
 
         # Configure data for saving.
@@ -290,15 +291,46 @@ def process_date(date: str, files: list[str], config: SiteConfiguration,
         mdict['names'] = daily_collection.columns.to_numpy()
         mdict['basetime'] = f"{year:04d} {doy:03d} 00:00:00.0"
 
-        write_dict_to_matlab_73(output_20hz, mdict)
+        high_freq_label = f'{Hz}Hz'
+        output_high_freq = get_daily_flux_filename(site=config.site,
+                                                   desc='L0',
+                                                   year=year,
+                                                   doy=doy,
+                                                   ext='mat')
+        output_30m = get_daily_flux_filename(site=config.site,
+                                             desc='Avg',
+                                             year=year,
+                                             doy=doy,
+                                             ext='csv')
+        output_year_dir = output_folder / f"{config.site}_{year}" / "DailyMAT"
+
+        # Build the year folder if not exists.
+        output_dir_high_freq = output_year_dir / "Raw"
+        output_dir_30m = output_year_dir / "Avg"
+
+        # Create output directories.
+        output_year_dir.mkdir(exist_ok=True, parents=True)
+        output_dir_high_freq.mkdir(exist_ok=True)
+        output_dir_30m.mkdir(exist_ok=True)
+
+        # Final output path.
+        output_high_freq = output_dir_high_freq / output_high_freq
+        output_30m = output_dir_30m / output_30m
+
+
+        write_dict_to_matlab_73(output_high_freq, mdict)
         daily_collection.resample("30 min",
-                                  closed="left",
-                                  label="left").mean().to_csv(output_30m)
+                                  closed="right",
+                                  label="right").mean()\
+                                    .round(3)\
+                                        .to_csv(output_30m)
+
         return date
 
     except Exception as e:
         click.echo(e, err=True)
         return "Failed %s" % date
+
 
 
 if __name__ == '__main__':
