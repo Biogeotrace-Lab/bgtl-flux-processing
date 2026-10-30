@@ -35,7 +35,7 @@ def load_timeseries(csv_path: str | Path | os.PathLike | IO[bytes],
             # Load the actual file with updated opts.
             timeseries = pd.read_csv(csv_path, **opts) 
 
-            if timeseries.dtypes.isin(["object", "str"]).any():
+            if timeseries.dtypes.isin(["object", "str"]).any() or timeseries.index.dtype == "str":
                 raise ArithmeticError(
                     "Non numerical data in timeseries. " \
                     "Check your na_values declaration.")
