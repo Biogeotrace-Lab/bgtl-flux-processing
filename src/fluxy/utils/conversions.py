@@ -23,13 +23,15 @@ def scale_dataframe(x: pd.DataFrame, reference: pd.DataFrame) -> pd.DataFrame:
 
 def clip_to_nan(
     data: pd.DataFrame,
-    lower_limits: np.ndarray | Sequence | float | None = None,
-    upper_limits: np.ndarray | Sequence | float | None = None,
+    lower_limits: pd.Series,
+    upper_limits: pd.Series,
 ):
     """Discard values out of predefined range and replace with NaN.
 
     # TODO parameters documentation
     """
+    data, lower_limits = data.align(lower_limits, axis=1)
+    data, upper_limits = data.align(upper_limits, axis=1)
     # None inequality assessment supported for dataframes.
     return data.mask((data < lower_limits) | (data > upper_limits),
                      inplace=True)
