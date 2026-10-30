@@ -38,6 +38,7 @@ class ReadCsvOpts(TypedDict, total=False):
     engine: Literal["c"] | Literal["python"] | Literal["pyarrow"]
     dtype_backend: Literal['numpy_nullable'] | Literal['pyarrow']
     usecols: list[str]
+    date_format: str | None
 
 # @dataclass
 class VoltsToUnitsConfig(msgspec.Struct):
@@ -51,8 +52,8 @@ type Evaluatable = str | int | float | None
 type VoltsToUnitsConsts = dict[VariableName, VoltsToUnitsConfig]
 
 class FluxVariableInfo(msgspec.Struct):
-    name: str
-    units: str = ''
+    name: str | None = None
+    units: str | None = None
     range: tuple[Evaluatable, Evaluatable] = (None, None)
 
 type L0ProcessingLevelConfig = dict[VariableName, FluxVariableInfo | None]
