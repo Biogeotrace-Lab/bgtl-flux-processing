@@ -5,7 +5,7 @@ import hdf5storage
 from pathlib import Path
 
 
-class Matlab73(h5py.File):
+class Matlab73File(h5py.File):
     """Weak wrapper around :class:`h5py.File` for reading `.mat` files of v7.3+
     """
     def __init__(self, name, mode='r', driver=None, libver=None,
@@ -25,20 +25,16 @@ class Matlab73(h5py.File):
 
         # Can recursively add keys as attributes pandas-style, optionally.
 
-    def __getitem__(self, name):
-        att = super().__getitem__(name)
-        return att
-
     def __del__(self):
         self.close()
 
 
-class MatlabFluxDataFrame(pd.DataFrame):
+class MatlabDataFrame(pd.DataFrame):
     """Extract specific 1-d columns from a `.mat` file
     into a `pandas.DataFrame`.
     """
     def __init__(self, filepath: str, keys: list[str]) -> None:
-        matfile = Matlab73(filepath)
+        matfile = Matlab73File(filepath)
         super().__init__({k: matfile['data'][k][:].flatten() for k in keys}) # type: ignore
 
 
