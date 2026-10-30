@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
               show_default=True,
               type=click.Path(dir_okay=False))
 @click.pass_context
-def main(ctx: click.Context, csv_like_files: list[str], output):
+def main(ctx: click.Context, csv_like_files: list[str], output: click.Path):
     """Build a complete timeseries master file from multiple csv sources.
 
     This command reliably builds a finalized timeseries
@@ -80,6 +80,8 @@ def main(ctx: click.Context, csv_like_files: list[str], output):
     # Run concatenation and sort.
     # We can sort because incase of duplicates it fails later.
     concatenated_dataframes = pd.concat(source_dataframes, axis=0).sort_index()
+
+    # Exclude from duplicate computation or just round everything to 2 decimals.
     include_cols = concatenated_dataframes.columns.difference(["ea_Avg"])
 
     concatenated_dataframes.drop_duplicates(
