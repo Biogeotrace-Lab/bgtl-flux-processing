@@ -1,9 +1,9 @@
-from fluxy.io.matlab import MatlabFluxDataFrame
 from fluxy.io.matlab import pd
 
 from scipy.ndimage import vectorized_filter
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 DATA = ("h", "z0", "d", )
@@ -13,7 +13,7 @@ D_H = .6
 Z0_H = .1
 
 
-def prepare_inputs_for_footprints(data: pd.DataFrame, z: float):
+def prepare_inputs_for_footprint_calculations(data: pd.DataFrame, z: float):
     """Prepare flux data for footprint estimation.
 
     :param z: Tower height.
@@ -27,3 +27,12 @@ def prepare_inputs_for_footprints(data: pd.DataFrame, z: float):
     ...
 
 
+def pdf(x, mu, sigma):
+    """Implementation of the gaussian kernel."""
+    return np.divide(np.exp(-0.5 * ((x - mu) / sigma) ** 2),
+                     (np.sqrt(2 * np.pi) * sigma))
+
+
+def plot_footprint(footprint: np.ndarray):
+    plt.imshow(footprint)
+    plt.close()
