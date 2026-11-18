@@ -6,14 +6,14 @@ read_csv_opts:
   - header: 0
     parse_dates: ["TIMESTAMP"]
     index_col: "TIMESTAMP"
-    na_values: ["-99999", "99999", "-9999", "9999", "-6999", "-7777", "NA", "NAN"]
+    na_values: ["-99999", "99999", "-9999", "9999", "-6999", "-7777", "NA", "NAN", "9999.99"]
   - header: 1
     skiprows: [2, 3]
     parse_dates: ["TIMESTAMP"]
     index_col: "TIMESTAMP"
-    na_values: ["-99999", "99999", "-9999", "9999", "-6999", "-7777", "NA", "NAN"]
+    na_values: ["-99999", "99999", "-9999", "9999", "-6999", "-7777", "NA", "NAN", "9999.99"]
   - header: 0
-    na_values: ["-99999", "99999", "-9999", "9999", "-6999", "-7777", "NA", "NAN"]
+    na_values: ["-99999", "99999", "-9999", "9999", "-6999", "-7777", "NA", "NAN", "9999.99"]
     parse_dates: null
     index_col: null
 
@@ -73,73 +73,90 @@ offline_periods:
   - []
 
 L0: # L0 processing: data collection and column mapping.
-  Date:
-  Time:
-  Diagnostic Value:
-    name: Diag75
-    units: ''
-    range: [0, 255]
-  CO2 (mmol/m^3):
-    name: C
-    units: mmol/m^3
-    range: [0, 50]
-  H2O (mmol/m^3):
-    name: Q
-    units: mmol/m^3
-    range: [0, 2000]
-  Temperature (C):
-    name: T_li75
-    units: C
-    range: [-10, 70]
-  Pressure (kPa):
-    name: P_li75
-    units: Kpa
-    range: [90,  120]
-  Cooler Voltage (V):
-    name: Cooler
-    units: V
-    range: [0,   5]
-  Dew Point (C):
-    name: Tdew
-    units: C
-    range: [-40, 70] 
-  CO2 Signal Strength:
-    name: SS
-    units: "%"
-    range: [0,   108]
-  U (m/s):
-    name: U
-    units: m/s
-    range: [-50, 50] 
-  V (m/s):
-    name: V
-    units: m/s
-    range: [-50, 50] 
-  W (m/s):
-    name: W
-    units: m/s
-    range: [-20, 20] 
-  T (C):
-    name: Ts
-    units: C
-    range: [-5,  50] 
-  CH4 Temperature:
-    name: T_li77
-    units: C
-    range: [-10, 70] 
-  CH4 Pressure:
-    name: P_li77
-    units: Kpa
-    range: [90,  120]
-  CH4 Signal Strength:
-    name: RSSI
-    units: "%"
-    range: [0,   100]
-  CH4 Diagnostic Value:
-    name: Diag77
-    units: ''
-    range: [null, null]
-  CH4 Drop Rate (%):
-    name: Drop
-    units: '%'
-    range: [0, 100]
+  "Diagnostic":
+  "M_li":
+  "CH4_mole_fraction":
+  "T_li77":
+  "P_li77":
+  "RSSI":
+  "Drop_rate":
+  "LI7700(11)":
+  "LI7700(12)":
+  "LI7700(13)":
+  "LI7700(14)":
+  "LI7700(15)":
+  "LI7700(16)":
+  "LI7700(17)":
+  "LI7700(18)":
+  "LI7700(19)":
+  "LI7700(20)":
+  "LI7700(21)":
+
+  # Diagnostic Value:
+  #   name: Diag75
+  #   units: ''
+  #   range: [0, 255]
+  # CO2 (mmol/m^3):
+  #   name: C
+  #   units: mmol/m^3
+  #   range: [0, 50]
+  # H2O (mmol/m^3):
+  #   name: Q
+  #   units: mmol/m^3
+  #   range: [0, 2000]
+  # Temperature (C):
+  #   name: T_li75
+  #   units: C
+  #   range: [-10, 70]
+  # Pressure (kPa):
+  #   name: P_li75
+  #   units: Kpa
+  #   range: [90,  120]
+  # Cooler Voltage (V):
+  #   name: Cooler
+  #   units: V
+  #   range: [0,   5]
+  # Dew Point (C):
+  #   name: Tdew
+  #   units: C
+  #   range: [-40, 70] 
+  # CO2 Signal Strength:
+  #   name: SS
+  #   units: "%"
+  #   range: [0,   108]
+  # U (m/s):
+  #   name: U
+  #   units: m/s
+  #   range: [-50, 50] 
+  # V (m/s):
+  #   name: V
+  #   units: m/s
+  #   range: [-50, 50] 
+  # W (m/s):
+  #   name: W
+  #   units: m/s
+  #   range: [-20, 20] 
+  # T (C):
+  #   name: Ts
+  #   units: C
+  #   range: [-5,  50] 
+  # CH4 Temperature:
+  #   name: T_li77
+  #   units: C
+  #   range: [-10, 70] 
+  # CH4 Pressure:
+  #   name: P_li77
+  #   units: Kpa
+  #   range: [90,  120]
+  # CH4 Signal Strength:
+  #   name: RSSI
+  #   units: "%"
+  #   range: [0,   100]
+  # CH4 Diagnostic Value:
+  #   name: Diag77
+  #   units: ''
+  #   range: [null, null]
+  # CH4 Drop Rate (%):
+  #   name: Drop
+  #   units: '%'
+  #   range: [0, 100]
