@@ -52,9 +52,9 @@ def main(extension: str, master: str, recover: bool, show_rows: int):
         # and checked for duplicates.
         duplicates = find_timeseries_duplicates(csv_dataframe)
 
-        QC.add_check("Extension has no duplicates",
+        QC.add_check("Extension has unique timestamps",
                      duplicates.empty,
-                     "Candidate contains duplicate timestamps.")
+                     "Extension contains duplicate timestamps.")
 
         # Verify extension index is sorted.
         QC.add_check("Extension index is sorted",
@@ -89,6 +89,9 @@ def main(extension: str, master: str, recover: bool, show_rows: int):
         # The end timestamp of the master file.
         ms_end = master_dataframe.index[-1]
 
+        # The start of the extension file.
+        csv_start = csv_dataframe.index.sort_values()[0]
+
         # The csv timestamps that are not in the master file.
         # These seem to continue being sorted.
         csv_indices_non_master = csv_dataframe.index.difference(
@@ -103,15 +106,12 @@ def main(extension: str, master: str, recover: bool, show_rows: int):
                      csv_indices_future.size > 0,
                      "There is no new data to write.")
 
-        # Get the indices before the master file end.
-        csv_indices_past = csv_indices_non_master[
-            csv_indices_non_master < ms_end
-        ]
-
+        # The start of master must be earlier
+        # than the start of the extension for the test
+        # to pass.
         QC.add_check("Extension is more recent than master",
-                     not csv_indices_past.empty and
-                     ms_start <= csv_indices_past[0],
-                     "Extension contains older records than master file. "
+                     ms_start <= csv_start,
+                     "Extension starts earlier than the master file. "
                      "Did you choose the correct files?")
 
         # The start of the future timestamps.
