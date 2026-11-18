@@ -26,7 +26,9 @@ dependencies = [
     "msgspec[yaml]",
     "hdf5storage",
     "httpx[http2]",
-    "dearpygui"
+    "dearpygui",
+    "cdsapi",
+    "xarray[io]"
 ]
 
 readme = "README.md"
