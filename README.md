@@ -1,4 +1,4 @@
-
+[![Fluxy PyPI](https://github.com/Biogeotrace-Lab/bgtl-flux-processing/actions/workflows/pypi-deployment.yaml/badge.svg)](https://github.com/Biogeotrace-Lab/bgtl-flux-processing/actions/workflows/pypi-deployment.yaml)
 # Welcome to Fluxy
 
 Fluxy is a python library and a command-line suite that focuses on excellent 
