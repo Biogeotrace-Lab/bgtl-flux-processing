@@ -127,7 +127,7 @@ class QualityControl(_ReportTable):
             if self.table.title is not None:
                 self.table.title += " (Partial)"
 
-        self.report_and_exit()
+        self.report()
 
 
 class ComparisonReport(_ReportTable):
