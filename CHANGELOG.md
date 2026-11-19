@@ -1,3 +1,20 @@
+## [2.1.1] - 2026-11-19
+
+### 🐛 Bug Fixes
+
+- Fixes program exit on qualityreport context manager exit
+## [2.1.0] - 2026-11-18
+
+### 🚀 Features
+
+- Added correct clip_to_nan implementation with label alignment
+- Separates L0 processing to csv and ghg logic in independent scripts
+- Renames orientation module to rotation and implements rotation funcs
+
+### 🐛 Bug Fixes
+
+- Adds object type to load_timeseries checks for incorrectly read data
+- Corrects falty check in extend-master command that caused file seniority check to fail on empty array
 ## [2.0.0] - 2026-10-01
 
 ### 🚀 Features
